@@ -1,0 +1,7 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="@string/pref_push_enable_key"
+        android:title="@string/pref_push_enable_title" />
+</PreferenceScreen>

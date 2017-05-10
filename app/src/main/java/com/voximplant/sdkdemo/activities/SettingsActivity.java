@@ -25,6 +25,7 @@ import static com.voximplant.sdkdemo.utils.Constants.KEY_PREF_PUSH_ENABLE;
 
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
+    private VoxClientManager mClientManager;
     private SharedPreferences mPrefs;
 
     /**
@@ -41,6 +42,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+        mClientManager = ((SDKDemoApplication) getApplication()).getClientManager();
         mPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     }
 
@@ -93,12 +95,35 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
      */
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
+                || NotificationPreferenceFragment.class.getName().equals(fragmentName)
                 || CallPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (key.equals(KEY_PREF_PUSH_ENABLE)) {
+            mClientManager.enablePushNotifications(sharedPreferences.getBoolean(KEY_PREF_PUSH_ENABLE, true));
+        }
+    }
 
+
+    public static class NotificationPreferenceFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            addPreferencesFromResource(R.xml.pref_notification);
+            setHasOptionsMenu(true);
+        }
+
+        @Override
+        public boolean onOptionsItemSelected(MenuItem item) {
+            int id = item.getItemId();
+            if (id == android.R.id.home) {
+                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
+        }
     }
 
     public static class CallPreferenceFragment extends PreferenceFragment {

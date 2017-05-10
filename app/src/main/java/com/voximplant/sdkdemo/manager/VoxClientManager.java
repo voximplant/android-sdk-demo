@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.voximplant.sdk.client.AuthParams;
 import com.voximplant.sdk.client.IClient;
 import com.voximplant.sdk.client.IClientLoginListener;
@@ -16,6 +17,7 @@ import com.voximplant.sdk.client.LoginError;
 import com.voximplant.sdkdemo.utils.SharedPreferencesHelper;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static com.voximplant.sdkdemo.utils.Constants.*;
 
@@ -33,6 +35,7 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     private State mCurrentState;
     private String mUsername = null;
     private String mPassword = null;
+    private String mFireBaseToken;
     private LocalBroadcastManager mBroadcastManager;
     private ArrayList<String> mServers = new ArrayList<>();
 
@@ -44,6 +47,7 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
             mCurrentState = State.DISCONNECTED;
             mBroadcastManager = LocalBroadcastManager.getInstance(appContext);
             mIsInitialized = true;
+            mFireBaseToken = FirebaseInstanceId.getInstance().getToken();
             //mServers.add("");
         }
     }
@@ -69,6 +73,7 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     public void logout() {
         if (mCurrentState == State.LOGGEDIN && mClient != null) {
+            enablePushNotifications(false);
             mClient.disconnect();
             mCurrentState = State.DISCONNECTED;
         }
@@ -111,6 +116,28 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
                 SharedPreferencesHelper.get().getStringFromPrefs(LOGIN_REFRESH_TOKEN) != null;
     }
 
+    public void firebaseTokenRefreshed(String token) {
+        if (mIsInitialized) {
+            mFireBaseToken = token;
+            enablePushNotifications(true);
+        }
+    }
+
+    public void pushNotificationReceived(Map<String, String> message) {
+        if (mIsInitialized) {
+            mClient.handlePushNotification(message);
+            loginWithToken();
+        }
+    }
+
+    public void enablePushNotifications(boolean enable) {
+        if (enable) {
+            mClient.registerForPushNotifications(mFireBaseToken);
+        } else {
+            mClient.unregisterFromPushNotifications(mFireBaseToken);
+        }
+    }
+
 
     @Override
     public void onConnectionEstablished() {
@@ -144,6 +171,7 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     @Override
     public void onLoginSuccessful(String displayName, AuthParams authParams) {
         mCurrentState = State.LOGGEDIN;
+        enablePushNotifications(SharedPreferencesHelper.get().getBooleanFromPrefs(KEY_PREF_PUSH_ENABLE));
         saveAuthDetailsToSharedPreferences(authParams);
         SharedPreferencesHelper.get().saveToPrefs(USERNAME, mUsername);
         Intent loginSuccessfulIntent = new Intent(VOX_INTENT);

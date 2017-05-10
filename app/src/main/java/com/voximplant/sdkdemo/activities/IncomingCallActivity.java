@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2017, Zingaya, Inc. All rights reserved.
- */
-
 package com.voximplant.sdkdemo.activities;
 
 import android.Manifest;
