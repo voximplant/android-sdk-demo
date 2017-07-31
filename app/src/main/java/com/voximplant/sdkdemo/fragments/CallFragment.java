@@ -319,7 +319,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
         if (mIsIncomingCall) {
             try {
                 if (mCall != null) {
-                    mCall.answer(null);
+                    mCall.answer("Android SDK custom data", null);
                 }
             } catch (CallException e) {
                 Log.e("SDKDemoApplication", "CallFragment: startCall exception: " + e);
@@ -420,6 +420,16 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     @Override
     public void onLocalVideoStreamRemoved(ICall call, IVideoStream videoStream) {
         videoStream.removeVideoRenderer(mLocalRender);
+    }
+
+    @Override
+    public void onICETimeout(ICall iCall) {
+
+    }
+
+    @Override
+    public void onICECompleted(ICall iCall) {
+
     }
 
     @Override

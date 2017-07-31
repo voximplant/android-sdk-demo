@@ -218,4 +218,14 @@ public class IncomingCallActivity extends AppCompatActivity implements ICallList
     public void onLocalVideoStreamRemoved(ICall call, IVideoStream videoStream) {
 
     }
+
+    @Override
+    public void onICETimeout(ICall iCall) {
+
+    }
+
+    @Override
+    public void onICECompleted(ICall iCall) {
+
+    }
 }
