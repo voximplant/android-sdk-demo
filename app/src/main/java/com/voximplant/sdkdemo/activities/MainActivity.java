@@ -335,9 +335,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             mCallToView.requestFocus();
             return;
         }
-        mCallToView.setError(null);
-        updateRecentCallsList(mCallToView.getText().toString());
-        mCallToView.setText("");
 
         mCallTo = to;
         if (permissionsGrantedForCall(isVideoCall)) {
@@ -346,6 +343,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startCallFragment(newCall, false);
                 mCallTo = null;
                 isNewVideoCall = false;
+
+                mCallToView.setError(null);
+                updateRecentCallsList(mCallToView.getText().toString());
+                mCallToView.setText("");
             }
         } else {
             isNewVideoCall = isVideoCall;
