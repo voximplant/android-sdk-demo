@@ -27,6 +27,7 @@ public class Constants {
 
     public static final String DISPLAY_NAME = "display_name";
     public static final String CALL_ID = "call_id";
+    public static final String WITH_VIDEO = "with_video";
     public static final int NEW_CALL_FRAGMENT_ID = 123456;
 
     public static final String KEY_PREF_PUSH_ENABLE = "push_enable";

@@ -34,6 +34,7 @@ public class SDKDemoApplication extends Application {
 
         ClientConfig clientConfig = new ClientConfig();
         //clientConfig.enableDebugLogging = true;
+        //clientConfig.H264first = true;
         IClient client = Voximplant.getClientInstance(Executors.newSingleThreadExecutor(), getApplicationContext(), clientConfig);
         mClientManager = new VoxClientManager(client, getApplicationContext());
         mCallManager = new VoxCallManager(client, getApplicationContext());

@@ -65,6 +65,14 @@
                     android:background="@mipmap/ic_audio_call"
                     android:contentDescription="@string/answer_call" />
 
+                <ImageButton
+                    android:id="@+id/answer_with_video_button"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    android:background="@mipmap/ic_video_call"
+                    android:contentDescription="@string/answer_call_with_video" />
 
                 <ImageButton
                     android:id="@+id/decline_call_button"

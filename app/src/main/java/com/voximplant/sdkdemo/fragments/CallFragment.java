@@ -13,7 +13,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.voximplant.sdk.call.CallException;
@@ -25,6 +28,7 @@ import com.voximplant.sdk.call.IEndpointListener;
 import com.voximplant.sdk.call.RenderScaleType;
 import com.voximplant.sdk.call.IVideoStream;
 import com.voximplant.sdk.Voximplant;
+import com.voximplant.sdk.call.VideoFlags;
 import com.voximplant.sdk.hardware.ICameraEventsListener;
 import com.voximplant.sdk.hardware.ICameraManager;
 import com.voximplant.sdk.hardware.VideoQuality;
@@ -32,10 +36,12 @@ import com.voximplant.sdkdemo.R;
 
 import org.webrtc.SurfaceViewRenderer;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.voximplant.sdkdemo.utils.Constants.CALL_ID;
 import static com.voximplant.sdkdemo.utils.Constants.INCOMING_CALL;
+import static com.voximplant.sdkdemo.utils.Constants.WITH_VIDEO;
 
 public class CallFragment extends Fragment implements ICallListener, IEndpointListener, ICameraEventsListener {
     private static final int LOCAL_X_CONNECTED = 72;
@@ -51,6 +57,8 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     private ICall mCall;
     private IEndpoint mEndpoint;
     private boolean mIsIncomingCall;
+    private boolean mAnswerWithVideo;
+    private HashMap<SurfaceViewRenderer, IVideoStream> mRemoteVideoStreamRenders = new HashMap<>();
 
     private PercentFrameLayout mLocalRenderLayout;
     private PercentFrameLayout mRemoteRenderLayout;
@@ -58,18 +66,22 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     private SurfaceViewRenderer mRemoteRender;
 
     private ImageButton mHangupButton;
-    private ImageButton mMuteVideoButton;
+    private ImageButton mMoreSettingsButton;
     private ImageButton mSwitchCameraButton;
     private ImageButton mMuteAudioButton;
     private ImageButton mHoldButton;
     private ImageButton mSpeakerPhoneButton;
+
+    private CheckBox mReceiveVideoCheckBox;
+    private CheckBox mSendVideoCheckBox;
 
     private AlertDialog mAlertDialog;
     private TextView mCallStatusTextView;
     private ICameraManager mCameraManager;
 
     private boolean mIsAudioMuted;
-    private boolean mIsVideoMuted;
+    private boolean mIsVideoSent;
+    private boolean mIsVideoReceived;
     private boolean mIsSpeakerPhoneEnabled;
     private boolean mIsCallHeld;
     private int mCameraType;
@@ -80,11 +92,12 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
         // Required empty public constructor
     }
 
-    public static CallFragment newInstance(String callId, boolean isIncomingCall) {
+    public static CallFragment newInstance(String callId, boolean isIncomingCall, boolean withVideo) {
         CallFragment fragment = new CallFragment();
         Bundle args = new Bundle();
         args.putString(CALL_ID, callId);
         args.putBoolean(INCOMING_CALL, isIncomingCall);
+        args.putBoolean(WITH_VIDEO, withVideo);
         fragment.setArguments(args);
         return fragment;
     }
@@ -95,6 +108,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
         if (getArguments() != null) {
             callId = getArguments().getString(CALL_ID);
             mIsIncomingCall = getArguments().getBoolean(INCOMING_CALL);
+            mAnswerWithVideo = getArguments().getBoolean(WITH_VIDEO);
         }
         mCameraType = 1; //front camera 1, back camera 0
     }
@@ -157,26 +171,76 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
             }
         });
 
-        mMuteVideoButton = (ImageButton) view.findViewById(R.id.mute_video_button);
-        mMuteVideoButton.setOnClickListener(new View.OnClickListener() {
+        final RelativeLayout moreSettingsLayout = (RelativeLayout) view.findViewById(R.id.more_settings_layout);
+        mMoreSettingsButton = (ImageButton) view.findViewById(R.id.more_settings_button);
+        mMoreSettingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mIsVideoMuted = !mIsVideoMuted;
-                mCall.sendVideo(!mIsVideoMuted, new ICallCompletionHandler() {
+                if (moreSettingsLayout.isShown()) {
+                    moreSettingsLayout.setVisibility(View.INVISIBLE);
+                } else {
+                    moreSettingsLayout.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+        if (mIsIncomingCall) {
+            if (mAnswerWithVideo) {
+                mIsVideoSent = true;
+                mIsVideoReceived = true;
+            }
+        } else if (mCall.isVideoEnabled()) {
+            mIsVideoSent = true;
+            mIsVideoReceived = true;
+        }
+
+        mSendVideoCheckBox = (CheckBox) view.findViewById(R.id.send_video_checkbox);
+        mSendVideoCheckBox.setChecked(mIsVideoSent);
+        mSendVideoCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mIsVideoSent = !mIsVideoSent;
+                mCall.sendVideo(isChecked && mIsVideoSent, new ICallCompletionHandler() {
                     @Override
                     public void onComplete() {
                         getActivity().runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                if (mIsVideoMuted) {
-                                    mMuteVideoButton.setBackgroundResource(R.mipmap.ic_add_video);
-                                    mSwitchCameraButton.setVisibility(View.INVISIBLE);
-                                    removeVideo();
-                                } else {
-                                    mMuteVideoButton.setBackgroundResource(R.mipmap.ic_remove_video);
+                                if (mIsVideoSent) {
                                     mSwitchCameraButton.setVisibility(View.VISIBLE);
                                     addVideo();
+                                } else {
+                                    mSwitchCameraButton.setVisibility(View.INVISIBLE);
+                                    removeVideo();
                                 }
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(CallException exception) {
+
+                    }
+                });
+            }
+        });
+
+        mReceiveVideoCheckBox = (CheckBox) view.findViewById(R.id.receive_video_checkbox);
+        mReceiveVideoCheckBox.setChecked(mIsVideoReceived);
+        if (mIsVideoReceived) {
+            mReceiveVideoCheckBox.setEnabled(false);
+        }
+        mReceiveVideoCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mIsVideoReceived = !mIsVideoReceived;
+                mCall.receiveVideo(new ICallCompletionHandler() {
+                    @Override
+                    public void onComplete() {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mReceiveVideoCheckBox.setEnabled(false);
                             }
                         });
                     }
@@ -274,7 +338,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
         mLocalRender = null;
         mRemoteRender = null;
         mHangupButton = null;
-        mMuteVideoButton = null;
+        mMoreSettingsButton = null;
         mSwitchCameraButton = null;
         mMuteAudioButton = null;
         mHoldButton = null;
@@ -308,25 +372,25 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     }
 
     private void startCall() {
-        if (mCall != null && mCall.isVideoEnabled()) {
-            mIsVideoMuted = false;
+        if ((mIsIncomingCall && mAnswerWithVideo) || (!mIsIncomingCall && mCall.isVideoEnabled())) {
             addVideo();
-        } else {
-            mMuteVideoButton.setBackgroundResource(R.mipmap.ic_add_video);
-            mIsVideoMuted = true;
         }
         mCallStatusTextView.setText(getString(R.string.call_connecting));
         if (mIsIncomingCall) {
             try {
                 if (mCall != null) {
-                    mCall.answer("Android SDK custom data", null);
+                    mCall.answer("test custom data android new API", new VideoFlags(mIsVideoReceived, mIsVideoSent), null);
                 }
             } catch (CallException e) {
-                Log.e("SDKDemoApplication", "CallFragment: startCall exception: " + e);
+                Log.e("SDKDemoApplication", "CallFragment: answer exception: " + e);
             }
         } else {
             if (mCall != null) {
-                mCall.start(null);
+                try {
+                    mCall.start(null);
+                } catch (CallException e) {
+                    Log.e("SDKDemoApplication", "CallFragment: start exception: " + e.getMessage());
+                }
             }
         }
     }
@@ -344,6 +408,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     // ICall callbacks
     @Override
     public void onCallConnected(ICall iCall, Map<String, String> headers) {
+        Log.i("SDKDemoApplication", "onCallConnected");
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -358,6 +423,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
 
     @Override
     public void onCallDisconnected(ICall iCall, Map<String, String> headers, boolean answeredElsewhere) {
+        Log.i("SDKDemoApplication", "onCallDisconnected");
         if (mListener != null) {
             mListener.onCallDisconnected(callId);
         }
@@ -365,6 +431,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
 
     @Override
     public void onCallRinging(ICall iCall, Map<String, String> headers) {
+        Log.i("SDKDemoApplication", "onCallRinging");
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -375,6 +442,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
 
     @Override
     public void onCallFailed(ICall iCall, int code, final String description, Map<String, String> headers) {
+        Log.i("SDKDemoApplication", "onCallFailed");
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -404,6 +472,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
 
     @Override
     public void onCallAudioStarted(ICall iCall) {
+        Log.i("SDKDemoApplication", "onCallAudioStarted");
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -423,23 +492,34 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     }
 
     @Override
-    public void onICETimeout(ICall iCall) {
-
+    public void onICETimeout(ICall call) {
+        Log.i("SDKDemoApplication", "onICETimeout");
     }
 
     @Override
-    public void onICECompleted(ICall iCall) {
-
+    public void onICECompleted(ICall call) {
+        Log.i("SDKDemoApplication", "onICECompleted");
     }
 
     @Override
     public void onRemoteVideoStreamAdded(IEndpoint endpoint, IVideoStream videoStream) {
+        if (mRemoteVideoStreamRenders.containsKey(mRemoteRender)) {
+            IVideoStream currentRenderedRemoteVideoStream = mRemoteVideoStreamRenders.get(mRemoteRender);
+            if (currentRenderedRemoteVideoStream != null) {
+                currentRenderedRemoteVideoStream.removeVideoRenderer(mRemoteRender);
+                mRemoteVideoStreamRenders.remove(mRemoteRender);
+            }
+        }
         videoStream.addVideoRenderer(mRemoteRender, RenderScaleType.SCALE_FIT);
+        mRemoteVideoStreamRenders.put(mRemoteRender, videoStream);
     }
 
     @Override
     public void onRemoteVideoStreamRemoved(IEndpoint endpoint, IVideoStream videoStream) {
-        videoStream.removeVideoRenderer(mRemoteRender);
+        if (mRemoteVideoStreamRenders.containsValue(videoStream)) {
+            videoStream.removeVideoRenderer(mRemoteRender);
+            mRemoteVideoStreamRenders.remove(mRemoteRender);
+        }
     }
 
     @Override
