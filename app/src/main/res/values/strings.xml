@@ -38,6 +38,9 @@
     <string name="speaker_on_off">Enable/disable speakerphone</string>
     <string name="mute_video">Mute/unmute video</string>
     <string name="hold_unhold_call">Hold/unhold call</string>
+    <string name="more_settings">More settings</string>
+    <string name="send_video">Send Video</string>
+    <string name="receive_video">Receive Video</string>
 
     <string name="recent_calls">Recent calls</string>
 
@@ -50,6 +53,7 @@
     <string name="audio_call_in_progress">Audio call is in progress</string>
     <string name="incoming_call_from">Incoming call from</string>
     <string name="answer_call">Answer call</string>
+    <string name="answer_call_with_video">Answer call with video</string>
 
     <string name="pref_push_group_title">Push notifications</string>
     <string name="pref_push_enable_key">push_enable</string>

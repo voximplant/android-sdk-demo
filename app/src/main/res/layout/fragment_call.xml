@@ -63,7 +63,41 @@
 
         </LinearLayout>
 
+        <RelativeLayout
+            android:id="@+id/more_settings_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="70dp"
+            android:layout_above="@+id/call_controls_bottom"
+            android:layout_centerHorizontal="true"
+            android:background="@color/colorWhite"
+            android:visibility="invisible">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:orientation="vertical"
+                android:layout_margin="10dp">
+
+                <CheckBox
+                    android:id="@+id/send_video_checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/send_video" />
+
+                <CheckBox
+                    android:id="@+id/receive_video_checkbox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/receive_video" />
+            </LinearLayout>
+
+        </RelativeLayout>
+
         <LinearLayout
+            android:id="@+id/call_controls_bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
@@ -97,16 +131,6 @@
                 android:background="@mipmap/ic_mic_off" />
 
             <ImageButton
-                android:id="@+id/mute_video_button"
-                android:contentDescription="@string/mute_video"
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:background="@mipmap/ic_remove_video" />
-
-            <ImageButton
                 android:id="@+id/hold_button"
                 android:contentDescription="@string/hold_unhold_call"
                 android:layout_width="55dp"
@@ -115,6 +139,16 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
                 android:background="@mipmap/ic_hold" />
+
+            <ImageButton
+                android:id="@+id/more_settings_button"
+                android:contentDescription="@string/more_settings"
+                android:layout_width="55dp"
+                android:layout_height="55dp"
+                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:background="@mipmap/ic_more" />
 
         </LinearLayout>
 

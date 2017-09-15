@@ -37,6 +37,7 @@ import android.widget.TextView;
 
 import com.voximplant.sdk.call.ICall;
 import com.voximplant.sdk.Voximplant;
+import com.voximplant.sdk.call.VideoFlags;
 import com.voximplant.sdkdemo.R;
 import com.voximplant.sdkdemo.SDKDemoApplication;
 import com.voximplant.sdkdemo.fragments.CallFragment;
@@ -58,6 +59,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private ArrayList<String> mRecentCalls = new ArrayList<>();
     private ArrayAdapter<String> mRecentCallsListAdapter;
     private EditText mCallToView;
+    private ImageButton mAudioCallButton;
+    private ImageButton mVideoCallButton;
 
     private boolean isVisible;
     private String mDisconnectCallId;
@@ -136,16 +139,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mRecentCallsListAdapter = new ArrayAdapter<>(this, android.R.layout.simple_expandable_list_item_1, mRecentCalls);
         recentCallsListView.setAdapter(mRecentCallsListAdapter);
 
-        ImageButton audioCallButton = (ImageButton) findViewById(R.id.button_audio_call);
-        audioCallButton.setOnClickListener(new View.OnClickListener() {
+        mAudioCallButton = (ImageButton) findViewById(R.id.button_audio_call);
+        mAudioCallButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 makeCall(mCallToView.getText().toString(), false);
                 hideKeyboard(v);
             }
         });
-        ImageButton videoCallButton = (ImageButton) findViewById(R.id.button_video_call);
-        videoCallButton.setOnClickListener(new View.OnClickListener() {
+        mVideoCallButton = (ImageButton) findViewById(R.id.button_video_call);
+        mVideoCallButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 makeCall(mCallToView.getText().toString(), true);
@@ -189,7 +192,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 int result = intent.getIntExtra(INCOMING_CALL_RESULT, -1);
                 switch (result) {
                     case CALL_ANSWERED:
-                        onAnswerCall(callId);
+                        boolean withVideo = intent.getBooleanExtra(WITH_VIDEO, false);
+                        onAnswerCall(callId, withVideo);
                         break;
                     case CALL_DISCONNECTED:
                         onCallDisconnected(callId);
@@ -233,10 +237,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             mIsVideoPermissionsGranted = true;
             return true;
         } else {
+            // Workaround for android 6.0.0 issue with CHANGE_NETWORK_STATE permission that is not granted
+            // without WRITE_SETTINGS permission. We can proceed with call start event if CHANGE_NETWORK_STATE
+            // permission is not granted
+            if (missingPermissions.contains(android.Manifest.permission.CHANGE_NETWORK_STATE)) {
+                missingPermissions.remove(android.Manifest.permission.CHANGE_NETWORK_STATE);
+            }
             mIsAudioPermissionsGranted = !missingPermissions.contains(android.Manifest.permission.RECORD_AUDIO);
             mIsVideoPermissionsGranted = !missingPermissions.contains(android.Manifest.permission.CAMERA);
-            ActivityCompat.requestPermissions(this, missingPermissions.toArray(new String[missingPermissions.size()]), PERMISSION_GRANTED);
-            return false;
+            if (missingPermissions.size() > 0) {
+                ActivityCompat.requestPermissions(this, missingPermissions.toArray(new String[missingPermissions.size()]), PERMISSION_GRANTED);
+                return false;
+            }
+            return true;
         }
     }
 
@@ -270,11 +283,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         if (title.equals(getString(R.string.make_new_call))) {
             findAndHideVisibleFragment();
+            mCallToView.setEnabled(true);
+            mAudioCallButton.setEnabled(true);
+            mVideoCallButton.setEnabled(true);
         } else {
             for (Map.Entry<String, String> entry : callUsersList.entrySet()) {
                 if (entry.getValue().equals(title)) {
                     Fragment callFragment = getSupportFragmentManager().findFragmentByTag(entry.getKey());
                     if (callFragment != null && callFragment.isHidden()) {
+                        mCallToView.setEnabled(false);
+                        mAudioCallButton.setEnabled(false);
+                        mVideoCallButton.setEnabled(false);
                         findAndHideVisibleFragment();
                         showFragment(getSupportFragmentManager().findFragmentByTag(entry.getKey()));
                     }
@@ -338,9 +357,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mCallTo = to;
         if (permissionsGrantedForCall(isVideoCall)) {
-            ICall newCall = mCallManager.createCall(to, isVideoCall);
+            ICall newCall = mCallManager.createCall(to, new VideoFlags(isVideoCall, isVideoCall));
             if (newCall != null) {
-                startCallFragment(newCall, false);
+                mCallToView.setEnabled(false);
+                mAudioCallButton.setEnabled(false);
+                mVideoCallButton.setEnabled(false);
+                startCallFragment(newCall, false, isVideoCall);
                 mCallTo = null;
                 isNewVideoCall = false;
 
@@ -358,9 +380,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
     }
 
-    private void onAnswerCall(String callId) {
+    private void onAnswerCall(String callId, boolean withVideo) {
         updateRecentCallsList(mCallManager.getCallById(callId).getEndpoints().get(0).getUserName());
-        startCallFragment(mCallManager.getCallById(callId), true);
+        mCallToView.setEnabled(false);
+        mAudioCallButton.setEnabled(false);
+        mVideoCallButton.setEnabled(false);
+        startCallFragment(mCallManager.getCallById(callId), true, withVideo);
         mCallManager.removeCall(callId);
     }
 
@@ -373,6 +398,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (callUsersList.containsKey(callId)) {
                         callUsersList.remove(callId);
                         removeCallFromNavigationMenu(callId);
+                        mCallToView.setEnabled(true);
+                        mAudioCallButton.setEnabled(true);
+                        mVideoCallButton.setEnabled(true);
                     }
                 }
             });
@@ -405,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mRecentCallsListAdapter.notifyDataSetChanged();
     }
 
-    private void startCallFragment(ICall call, boolean isIncomingCall) {
+    private void startCallFragment(ICall call, boolean isIncomingCall, boolean withVideo) {
         String callUser;
         if (isIncomingCall) {
             callUser = call.getEndpoints().get(0).getUserName();
@@ -415,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         callUsersList.put(call.getCallId(), callUser);
         addCallToNavigationMenu(call.getCallId(), callUser);
         findAndHideVisibleFragment();
-        CallFragment callFragment = CallFragment.newInstance(call.getCallId(), isIncomingCall);
+        CallFragment callFragment = CallFragment.newInstance(call.getCallId(), isIncomingCall, withVideo);
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.callsContainer, callFragment, call.getCallId())
                 .commit();

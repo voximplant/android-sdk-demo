@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.voximplant.sdk.call.ICall;
+import com.voximplant.sdk.call.VideoFlags;
 import com.voximplant.sdk.client.IClient;
 import com.voximplant.sdk.client.IClientIncomingCallListener;
 import com.voximplant.sdkdemo.activities.IncomingCallActivity;
@@ -28,8 +29,8 @@ public class VoxCallManager implements IClientIncomingCallListener{
         mClient.setClientIncomingCallListener(this);
     }
 
-    public ICall createCall(String user, boolean isVideoCall) {
-        return mClient.callTo(user, isVideoCall, null);
+    public ICall createCall(String user, VideoFlags videoFlags) {
+        return mClient.callTo(user, videoFlags, null);
     }
 
     public ICall getCallById(String callId) {
@@ -46,7 +47,7 @@ public class VoxCallManager implements IClientIncomingCallListener{
     }
 
     @Override
-    public void onIncomingCall(ICall call, Map<String, String> headers) {
+    public void onIncomingCall(ICall call, boolean video,  Map<String, String> headers) {
         mIncomingCalls.put(call.getCallId(), call);
         Intent incomingCallIntent = new Intent(mAppContext, IncomingCallActivity.class);
         incomingCallIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

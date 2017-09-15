@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2017, Zingaya, Inc. All rights reserved.
- */
-
 package com.voximplant.sdkdemo.activities;
 
 import android.Manifest;
@@ -36,6 +32,7 @@ import static com.voximplant.sdkdemo.utils.Constants.CALL_ANSWERED;
 import static com.voximplant.sdkdemo.utils.Constants.CALL_DISCONNECTED;
 import static com.voximplant.sdkdemo.utils.Constants.CALL_ID;
 import static com.voximplant.sdkdemo.utils.Constants.INCOMING_CALL_RESULT;
+import static com.voximplant.sdkdemo.utils.Constants.WITH_VIDEO;
 
 public class IncomingCallActivity extends AppCompatActivity implements ICallListener {
 
@@ -72,13 +69,23 @@ public class IncomingCallActivity extends AppCompatActivity implements ICallList
             callFrom.setText(mCall.getEndpoints().get(0).getUserDisplayName());
         }
 
-        ImageButton answerCallButton = (ImageButton) findViewById(R.id.answer_call_button);
+        ImageButton answerWithAudioCallButton = (ImageButton) findViewById(R.id.answer_call_button);
         final IncomingCallActivity self = this;
-        answerCallButton.setOnClickListener(new View.OnClickListener() {
+        answerWithAudioCallButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (permissionsGrantedForCall(mCall.isVideoEnabled())) {
-                    answerCall();
+                if (permissionsGrantedForCall(false)) {
+                    answerCall(false);
+                }
+            }
+        });
+
+        ImageButton answerWithVideoCallButton = (ImageButton) findViewById(R.id.answer_with_video_button);
+        answerWithVideoCallButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (permissionsGrantedForCall(true)) {
+                    answerCall(true);
                 }
             }
         });
@@ -105,9 +112,9 @@ public class IncomingCallActivity extends AppCompatActivity implements ICallList
     public void onResume() {
         super.onResume();
         if (mCall.isVideoEnabled() && mIsAudioPermissionsGranted && mIsVideoPermissionsGranted) {
-            answerCall();
+            answerCall(true);
         } else if (mIsAudioPermissionsGranted) {
-            answerCall();
+            answerCall(false);
         }
     }
 
@@ -154,7 +161,7 @@ public class IncomingCallActivity extends AppCompatActivity implements ICallList
         }
     }
 
-    private void answerCall() {
+    private void answerCall(boolean withVideo) {
         if (mCall != null) {
             mCall.removeCallListener(this);
         }
@@ -163,6 +170,7 @@ public class IncomingCallActivity extends AppCompatActivity implements ICallList
         data.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         data.putExtra(INCOMING_CALL_RESULT, CALL_ANSWERED);
         data.putExtra(CALL_ID, mCallId);
+        data.putExtra(WITH_VIDEO, withVideo);
         startActivity(data);
         finish();
     }
@@ -220,12 +228,12 @@ public class IncomingCallActivity extends AppCompatActivity implements ICallList
     }
 
     @Override
-    public void onICETimeout(ICall iCall) {
+    public void onICETimeout(ICall call) {
 
     }
 
     @Override
-    public void onICECompleted(ICall iCall) {
+    public void onICECompleted(ICall call) {
 
     }
 }
