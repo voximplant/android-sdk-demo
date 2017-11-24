@@ -58,7 +58,7 @@
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
                 android:layout_marginRight="8dp"
-                android:background="@mipmap/ic_speaker_off"
+                android:background="@mipmap/ic_earpiece"
                 android:contentDescription="@string/speaker_on_off" />
 
         </LinearLayout>
