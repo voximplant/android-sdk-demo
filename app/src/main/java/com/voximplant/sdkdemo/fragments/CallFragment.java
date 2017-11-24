@@ -29,6 +29,8 @@ import com.voximplant.sdk.call.RenderScaleType;
 import com.voximplant.sdk.call.IVideoStream;
 import com.voximplant.sdk.Voximplant;
 import com.voximplant.sdk.call.VideoFlags;
+import com.voximplant.sdk.hardware.AudioDevice;
+import com.voximplant.sdk.hardware.IAudioDeviceEventsListener;
 import com.voximplant.sdk.hardware.ICameraEventsListener;
 import com.voximplant.sdk.hardware.ICameraManager;
 import com.voximplant.sdk.hardware.VideoQuality;
@@ -36,14 +38,16 @@ import com.voximplant.sdkdemo.R;
 
 import org.webrtc.SurfaceViewRenderer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.voximplant.sdkdemo.utils.Constants.CALL_ID;
 import static com.voximplant.sdkdemo.utils.Constants.INCOMING_CALL;
 import static com.voximplant.sdkdemo.utils.Constants.WITH_VIDEO;
 
-public class CallFragment extends Fragment implements ICallListener, IEndpointListener, ICameraEventsListener {
+public class CallFragment extends Fragment implements ICallListener, IEndpointListener, ICameraEventsListener, IAudioDeviceEventsListener {
     private static final int LOCAL_X_CONNECTED = 72;
     private static final int LOCAL_Y_CONNECTED = 72;
     private static final int LOCAL_WIDTH_CONNECTED = 25;
@@ -70,7 +74,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     private ImageButton mSwitchCameraButton;
     private ImageButton mMuteAudioButton;
     private ImageButton mHoldButton;
-    private ImageButton mSpeakerPhoneButton;
+    private ImageButton mAudioDeviceButton;
 
     private CheckBox mReceiveVideoCheckBox;
     private CheckBox mSendVideoCheckBox;
@@ -82,9 +86,10 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     private boolean mIsAudioMuted;
     private boolean mIsVideoSent;
     private boolean mIsVideoReceived;
-    private boolean mIsSpeakerPhoneEnabled;
     private boolean mIsCallHeld;
     private int mCameraType;
+
+    private List<AudioDevice> mAvailableAudioDevices;
 
     private OnCallFragmentListener mListener;
 
@@ -120,6 +125,9 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
 
         mCameraManager = Voximplant.getCameraManager(getContext());
         mCameraManager.addCameraEventsListener(this);
+
+        Voximplant.getAudioDeviceManager().addAudioDeviceEventsListener(this);
+        mAvailableAudioDevices = Voximplant.getAudioDeviceManager().getAudioDevices();
 
         mLocalRender = (SurfaceViewRenderer) view.findViewById(R.id.local_video_view);
         mRemoteRender = (SurfaceViewRenderer) view.findViewById(R.id.remote_video_view);
@@ -281,17 +289,31 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
             }
         });
 
-        mSpeakerPhoneButton = (ImageButton) view.findViewById(R.id.speaker_button);
-        mSpeakerPhoneButton.setOnClickListener(new View.OnClickListener() {
+        mAudioDeviceButton = (ImageButton) view.findViewById(R.id.speaker_button);
+        updateAudioDeviceIcon(Voximplant.getAudioDeviceManager().getActiveDevice());
+        mAudioDeviceButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mIsSpeakerPhoneEnabled = !mIsSpeakerPhoneEnabled;
-                Voximplant.getAudioDeviceManager().enableLoudspeaker(mIsSpeakerPhoneEnabled);
-                if (mIsSpeakerPhoneEnabled) {
-                    mSpeakerPhoneButton.setBackgroundResource(R.mipmap.ic_speaker_on);
-                } else {
-                    mSpeakerPhoneButton.setBackgroundResource(R.mipmap.ic_speaker_off);
+                final List<String> audioDevices = new ArrayList<>();
+                for (AudioDevice device : mAvailableAudioDevices) {
+                    audioDevices.add(device.toString());
                 }
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle(R.string.alert_select_audio_device)
+                        .setItems(audioDevices.toArray(new String[audioDevices.size()]), new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                if (audioDevices.get(which).equals(AudioDevice.EARPIECE.toString())) {
+                                    Voximplant.getAudioDeviceManager().selectAudioDevice(AudioDevice.EARPIECE);
+                                } else if (audioDevices.get(which).equals(AudioDevice.SPEAKER.toString())) {
+                                    Voximplant.getAudioDeviceManager().selectAudioDevice(AudioDevice.SPEAKER);
+                                } else if (audioDevices.get(which).equals(AudioDevice.WIRED_HEADSET.toString())) {
+                                    Voximplant.getAudioDeviceManager().selectAudioDevice(AudioDevice.WIRED_HEADSET);
+                                } else if (audioDevices.get(which).equals(AudioDevice.BLUETOOTH.toString())) {
+                                    Voximplant.getAudioDeviceManager().selectAudioDevice(AudioDevice.BLUETOOTH);
+                                }
+                            }
+                        });
+                builder.create().show();
             }
         });
 
@@ -322,6 +344,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
             mEndpoint.setEndpointListener(null);
             mCameraManager.removeCameraEventsListener(this);
         }
+        Voximplant.getAudioDeviceManager().removeAudioDeviceEventsListener(this);
         mCameraManager = null;
         mEndpoint = null;
         mCall = null;
@@ -342,7 +365,7 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
         mSwitchCameraButton = null;
         mMuteAudioButton = null;
         mHoldButton = null;
-        mSpeakerPhoneButton = null;
+        mAudioDeviceButton = null;
     }
 
     @Override
@@ -561,6 +584,38 @@ public class CallFragment extends Fragment implements ICallListener, IEndpointLi
     @Override
     public void onCameraSwitchError(String errorDescription) {
 
+    }
+
+    private void updateAudioDeviceIcon(AudioDevice audioDevice) {
+        switch (audioDevice) {
+            case EARPIECE:
+                mAudioDeviceButton.setBackgroundResource(R.mipmap.ic_earpiece);
+                break;
+            case SPEAKER:
+                mAudioDeviceButton.setBackgroundResource(R.mipmap.ic_speaker);
+                break;
+            case WIRED_HEADSET:
+                mAudioDeviceButton.setBackgroundResource(R.mipmap.ic_headset);
+                break;
+            case BLUETOOTH:
+                mAudioDeviceButton.setBackgroundResource(R.mipmap.ic_bluetooth);
+                break;
+        }
+    }
+
+    @Override
+    public void onAudioDeviceChanged(final AudioDevice audioDevice) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                updateAudioDeviceIcon(audioDevice);
+            }
+        });
+    }
+
+    @Override
+    public void onAudioDeviceListChanged(List<AudioDevice> list) {
+        mAvailableAudioDevices = list;
     }
 
     public interface OnCallFragmentListener {
