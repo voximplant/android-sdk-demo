@@ -49,7 +49,7 @@ public class VoxCallManager implements IClientIncomingCallListener{
     @Override
     public void onIncomingCall(ICall call, boolean video,  Map<String, String> headers) {
         mIncomingCalls.put(call.getCallId(), call);
-        Intent incomingCallIntent = new Intent(mAppContext, com.voximplant.sdkdemo.activities.IncomingCallActivity.class);
+        Intent incomingCallIntent = new Intent(mAppContext, IncomingCallActivity.class);
         incomingCallIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TOP);
         incomingCallIntent.putExtra(CALL_ID, call.getCallId());
         mAppContext.startActivity(incomingCallIntent);
