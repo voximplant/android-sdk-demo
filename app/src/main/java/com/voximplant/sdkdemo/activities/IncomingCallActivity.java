@@ -19,6 +19,7 @@ import com.voximplant.sdk.call.CallException;
 import com.voximplant.sdk.call.ICall;
 import com.voximplant.sdk.call.ICallListener;
 import com.voximplant.sdk.call.IVideoStream;
+import com.voximplant.sdk.call.RejectMode;
 import com.voximplant.sdkdemo.R;
 import com.voximplant.sdkdemo.SDKDemoApplication;
 import com.voximplant.sdkdemo.manager.VoxCallManager;
@@ -96,7 +97,7 @@ public class IncomingCallActivity extends AppCompatActivity implements ICallList
             public void onClick(View v) {
                 try {
                     if (mCall != null) {
-                        mCall.reject(null);
+                        mCall.reject(RejectMode.DECLINE, null);
                         mCall.removeCallListener(self);
                     }
                 } catch (CallException e) {
@@ -122,7 +123,7 @@ public class IncomingCallActivity extends AppCompatActivity implements ICallList
     public void onBackPressed() {
         if (mCall != null) {
             try {
-                mCall.reject(null);
+                mCall.reject(RejectMode.DECLINE, null);
                 mCall.removeCallListener(this);
             } catch (CallException e) {
                 Log.e("VoxImplantSDKDemo", "exception on reject call ", e);
