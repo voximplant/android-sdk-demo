@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Zingaya, Inc. All rights reserved.
+ * Copyright (c) 2011-2018, Zingaya, Inc. All rights reserved.
  */
 
 package com.voximplant.sdkdemo.fragments;
