@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018, Zingaya, Inc. All rights reserved.
+ * Copyright (c) 2011- 2018, Zingaya, Inc. All rights reserved.
  */
 
 package com.voximplant.sdkdemo.utils;
@@ -40,11 +40,11 @@ public class NotificationHelper {
 		return instance;
 	}
 
-	public int buildMessengerNotification(IMessengerEvent event) {
+	public int buildMessengerNotification(IMessengerEvent event, Context context) {
 		NotificationCompat.Builder builder = null;
 		if (event.getMessengerEventType() == MessengerEventType.ON_SEND_MESSAGE) {
 			IMessageEvent messageEvent = (IMessageEvent)event;
-			builder = new NotificationCompat.Builder(SDKDemoApplication.getAppContext())
+			builder = new NotificationCompat.Builder(context)
 					.setSmallIcon(R.mipmap.ic_launcher_round)
 					.setContentTitle("New message from " + messageEvent.getMessage().getSender())
 					.setContentText(messageEvent.getMessage().getText())

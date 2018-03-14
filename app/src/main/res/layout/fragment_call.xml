@@ -1,178 +1,154 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/colorWhite"
-    tools:context="com.voximplant.sdkdemo.fragments.CallFragment">
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+             xmlns:tools="http://schemas.android.com/tools"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="@color/colorWhite"
+             tools:context=".ui.call.CallFragment">
 
-    <RelativeLayout
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.voximplant.sdkdemo.fragments.PercentFrameLayout
-            android:id="@+id/remote_video_layout"
+        <RelativeLayout
+            android:id="@+id/video_views"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <org.webrtc.SurfaceViewRenderer
-                android:id="@+id/remote_video_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </com.voximplant.sdkdemo.fragments.PercentFrameLayout>
 
-        <com.voximplant.sdkdemo.fragments.PercentFrameLayout
-            android:id="@+id/local_video_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+        </RelativeLayout>
 
-            <org.webrtc.SurfaceViewRenderer
-                android:id="@+id/local_video_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+        <ImageButton
+            android:id="@+id/switch_camera_button"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/button_image_passive"
+            android:contentDescription="@string/switch_camera"
+            android:tint="@color/colorAccent"
+            app:layout_constraintEnd_toStartOf="@+id/speaker_button"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_camera_rear_black_35dp"
+            android:layout_marginRight="8dp"/>
 
-        </com.voximplant.sdkdemo.fragments.PercentFrameLayout>
+        <ImageButton
+            android:id="@+id/speaker_button"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/button_image_passive"
+            android:contentDescription="@string/speaker_on_off"
+            android:tint="@color/colorAccent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_hearing_black_35dp"
+            android:layout_marginRight="16dp"/>
+
+        <ImageButton
+            android:id="@+id/hangup_button"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:background="@drawable/button_image_red_passive"
+            android:contentDescription="@string/hangup_call"
+            android:tint="@color/colorRed"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/ic_call_end_black_40dp"/>
+
+        <ImageButton
+            android:id="@+id/mute_audio_button"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/button_image_passive"
+            android:contentDescription="@string/mute_audio"
+            android:tint="@color/colorAccent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/hangup_button"
+            app:srcCompat="@drawable/ic_mic_off_black_35dp"
+            android:layout_marginLeft="8dp"/>
+
+        <ImageButton
+            android:id="@+id/hold_button"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/button_image_passive"
+            android:contentDescription="@string/mute_audio"
+            android:tint="@color/colorAccent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/mute_audio_button"
+            app:srcCompat="@drawable/ic_phone_paused_black_35dp"
+            android:layout_marginLeft="8dp"/>
+
+        <ImageButton
+            android:id="@+id/more_settings_button"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/button_image_passive"
+            android:contentDescription="@string/more_settings"
+            android:tint="@color/colorAccent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/hold_button"
+            app:srcCompat="@drawable/ic_more_horiz_black_35dp"
+            android:layout_marginLeft="8dp"/>
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true"
-            android:layout_alignWithParentIfMissing="true"
-            android:layout_marginLeft="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp">
-
-            <ImageButton
-                android:id="@+id/switch_camera_button"
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:background="@mipmap/ic_camera_back"
-                android:contentDescription="@string/switch_camera" />
-
-            <ImageButton
-                android:id="@+id/speaker_button"
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:background="@mipmap/ic_earpiece"
-                android:contentDescription="@string/speaker_on_off" />
-
-        </LinearLayout>
-
-        <RelativeLayout
             android:id="@+id/more_settings_layout"
             android:layout_width="wrap_content"
-            android:layout_height="70dp"
-            android:layout_above="@+id/call_controls_bottom"
-            android:layout_centerHorizontal="true"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_margin="10dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:orientation="vertical"
             android:background="@color/colorWhite"
+            app:layout_constraintBottom_toTopOf="@id/more_settings_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             android:visibility="invisible">
 
-            <LinearLayout
+            <CheckBox
+                android:id="@+id/send_video_checkbox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:orientation="vertical"
-                android:layout_margin="10dp">
+                android:layout_weight="1"
+                android:text="@string/send_video"/>
 
-                <CheckBox
-                    android:id="@+id/send_video_checkbox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/send_video" />
-
-                <CheckBox
-                    android:id="@+id/receive_video_checkbox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/receive_video" />
-            </LinearLayout>
-
-        </RelativeLayout>
+            <CheckBox
+                android:id="@+id/receive_video_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/receive_video"/>
+        </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/call_controls_bottom"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentBottom="true"
-            android:layout_alignWithParentIfMissing="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginLeft="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:orientation="horizontal">
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <ImageButton
-                android:id="@+id/hangup_button"
-                android:contentDescription="@string/hangup_call"
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:background="@mipmap/ic_hangup" />
-
-            <ImageButton
-                android:id="@+id/mute_audio_button"
-                android:contentDescription="@string/mute_audio"
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:background="@mipmap/ic_mic_off" />
-
-            <ImageButton
-                android:id="@+id/hold_button"
-                android:contentDescription="@string/hold_unhold_call"
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:background="@mipmap/ic_hold" />
-
-            <ImageButton
-                android:id="@+id/more_settings_button"
-                android:contentDescription="@string/more_settings"
-                android:layout_width="55dp"
-                android:layout_height="55dp"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginRight="8dp"
-                android:background="@mipmap/ic_more" />
+            <TextView
+                android:id="@+id/call_status_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/colorWhite"/>
 
         </LinearLayout>
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true"
-                android:id="@+id/linearLayout">
-
-                <TextView
-                    android:id="@+id/call_status_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@color/colorWhite"/>
-
-            </LinearLayout>
-
-        </RelativeLayout>
-
-    </RelativeLayout>
+    </android.support.constraint.ConstraintLayout>
 
 </FrameLayout>

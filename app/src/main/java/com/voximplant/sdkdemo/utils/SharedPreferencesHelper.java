@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018, Zingaya, Inc. All rights reserved.
+ * Copyright (c) 2011- 2018, Zingaya, Inc. All rights reserved.
  */
 
 package com.voximplant.sdkdemo.utils;
@@ -61,7 +61,7 @@ public class SharedPreferencesHelper {
 
     public boolean getBooleanFromPrefs(String key) {
         try {
-            return prefs.getBoolean(key, false);
+            return prefs.getBoolean(key, true);
         } catch (Exception e) {
             return false;
         }
