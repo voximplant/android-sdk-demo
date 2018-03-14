@@ -1,6 +1,6 @@
 <preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
     <header
-        android:fragment="com.voximplant.sdkdemo.activities.SettingsActivity$CallPreferenceFragment"
+        android:fragment="com.voximplant.sdkdemo.ui.settings.SettingsActivity$CallPreferenceFragment"
         android:title="@string/pref_call_group_title" />
 
 </preference-headers>

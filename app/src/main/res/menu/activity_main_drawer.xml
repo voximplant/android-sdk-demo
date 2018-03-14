@@ -4,11 +4,11 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_setting"
-            android:icon="@mipmap/ic_settings"
+            android:icon="@drawable/ic_settings_black_24dp"
             android:title="@string/settings" />
         <item
             android:title="@string/log_out"
-            android:icon="@mipmap/ic_logout"
+            android:icon="@drawable/ic_exit_to_app_black_24dp"
             android:id="@+id/nav_logout"/>
     </group>
 </menu>

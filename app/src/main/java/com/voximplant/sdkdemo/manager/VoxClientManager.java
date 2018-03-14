@@ -1,23 +1,32 @@
 /*
- * Copyright (c) 2011-2018, Zingaya, Inc. All rights reserved.
+ * Copyright (c) 2011- 2018, Zingaya, Inc. All rights reserved.
  */
 
 package com.voximplant.sdkdemo.manager;
 
-import android.content.Context;
-import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
-
+import com.voximplant.sdk.Voximplant;
 import com.voximplant.sdk.client.AuthParams;
+import com.voximplant.sdk.client.ClientState;
 import com.voximplant.sdk.client.IClient;
 import com.voximplant.sdk.client.IClientLoginListener;
 import com.voximplant.sdk.client.IClientSessionListener;
 import com.voximplant.sdk.client.LoginError;
+import com.voximplant.sdk.messaging.IMessenger;
+import com.voximplant.sdk.messaging.MessengerNotifications;
 import com.voximplant.sdkdemo.utils.SharedPreferencesHelper;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.voximplant.sdkdemo.utils.Constants.*;
+import static com.voximplant.sdkdemo.utils.Constants.KEY_PREF_PUSH_ENABLE;
+import static com.voximplant.sdkdemo.utils.Constants.LOGIN_ACCESS_EXPIRE;
+import static com.voximplant.sdkdemo.utils.Constants.LOGIN_ACCESS_TOKEN;
+import static com.voximplant.sdkdemo.utils.Constants.LOGIN_REFRESH_EXPIRE;
+import static com.voximplant.sdkdemo.utils.Constants.LOGIN_REFRESH_TOKEN;
+import static com.voximplant.sdkdemo.utils.Constants.MILLISECONDS_IN_SECOND;
+import static com.voximplant.sdkdemo.utils.Constants.REFRESH_TIME;
+import static com.voximplant.sdkdemo.utils.Constants.USERNAME;
 
 public class VoxClientManager implements IClientSessionListener, IClientLoginListener {
 
@@ -28,24 +37,29 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     }
 
     private IClient mClient = null;
-    private boolean mIsInitialized = false;
+    private CopyOnWriteArrayList<IClientManagerListener> mListeners = new CopyOnWriteArrayList<>();
 
     private State mCurrentState;
     private String mUsername = null;
     private String mPassword = null;
-    private LocalBroadcastManager mBroadcastManager;
     private ArrayList<String> mServers = new ArrayList<>();
 
-    public VoxClientManager(IClient client, Context appContext) {
-        if (!mIsInitialized) {
-            mClient = client;
-            mClient.setClientLoginListener(this);
-            mClient.setClientSessionListener(this);
-            mCurrentState = State.DISCONNECTED;
-            mBroadcastManager = LocalBroadcastManager.getInstance(appContext);
-            mIsInitialized = true;
-            //mServers.add("");
-        }
+    public VoxClientManager() {
+        mCurrentState = State.DISCONNECTED;
+    }
+
+    public void setClient(IClient client) {
+        mClient = client;
+        mClient.setClientLoginListener(this);
+        mClient.setClientSessionListener(this);
+    }
+
+    synchronized public void addListener(IClientManagerListener listener) {
+        mListeners.add(listener);
+    }
+
+    synchronized public void removeListener(IClientManagerListener listener) {
+        mListeners.remove(listener);
     }
 
     public State getCurrentState() {
@@ -53,16 +67,14 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     }
 
     public void login(String username, String password) {
-        if (mIsInitialized) {
-            mUsername = username;
-            mPassword = password;
-            if (mClient != null) {
-                if (mCurrentState == State.DISCONNECTED) {
-                    mClient.connect(true, mServers);
-                }
-                if (mCurrentState == State.CONNECTED) {
-                    mClient.login(username, password);
-                }
+        mUsername = username;
+        mPassword = password;
+        if (mClient != null) {
+            if (mCurrentState == State.DISCONNECTED) {
+                mClient.connect(false, mServers);
+            }
+            if (mCurrentState == State.CONNECTED) {
+                mClient.login(username, password);
             }
         }
     }
@@ -97,9 +109,9 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     private void saveAuthDetailsToSharedPreferences(AuthParams authParams) {
         SharedPreferencesHelper.get().saveToPrefs(REFRESH_TIME, System.currentTimeMillis());
         SharedPreferencesHelper.get().saveToPrefs(LOGIN_ACCESS_TOKEN, authParams.getAccessToken());
-        SharedPreferencesHelper.get().saveToPrefs(LOGIN_ACCESS_EXPIRE, (long)authParams.getAccessTokenTimeExpired());
+        SharedPreferencesHelper.get().saveToPrefs(LOGIN_ACCESS_EXPIRE, (long) authParams.getAccessTokenTimeExpired());
         SharedPreferencesHelper.get().saveToPrefs(LOGIN_REFRESH_TOKEN, authParams.getRefreshToken());
-        SharedPreferencesHelper.get().saveToPrefs(LOGIN_REFRESH_EXPIRE, (long)authParams.getRefreshTokenTimeExpired());
+        SharedPreferencesHelper.get().saveToPrefs(LOGIN_REFRESH_EXPIRE, (long) authParams.getRefreshTokenTimeExpired());
     }
 
     private boolean isTokenExpired(long lifeTime) {
@@ -110,7 +122,6 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
         return SharedPreferencesHelper.get().getStringFromPrefs(LOGIN_ACCESS_TOKEN) != null &&
                 SharedPreferencesHelper.get().getStringFromPrefs(LOGIN_REFRESH_TOKEN) != null;
     }
-
 
     @Override
     public void onConnectionEstablished() {
@@ -126,39 +137,54 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     }
 
     @Override
-    public void onConnectionFailed(String error) {
+    public synchronized void onConnectionFailed(String error) {
         mCurrentState = State.DISCONNECTED;
-        Intent connectionFailedIntent = new Intent(VOX_INTENT);
-        connectionFailedIntent.putExtra(EVENT, CONNECTION_FAILED);
-        mBroadcastManager.sendBroadcast(connectionFailedIntent);
+        for (IClientManagerListener listener : mListeners) {
+            listener.onConnectionFailed();
+        }
     }
 
     @Override
-    public void onConnectionClosed() {
+    public synchronized void onConnectionClosed() {
         mCurrentState = State.DISCONNECTED;
-        Intent disconnectedIntent = new Intent(VOX_INTENT);
-        disconnectedIntent.putExtra(EVENT, DISCONNECTED);
-        mBroadcastManager.sendBroadcast(disconnectedIntent);
+        for (IClientManagerListener listener : mListeners) {
+            listener.onConnectionClosed();
+        }
     }
 
     @Override
-    public void onLoginSuccessful(String displayName, AuthParams authParams) {
+    public synchronized void onLoginSuccessful(String displayName, AuthParams authParams) {
         mCurrentState = State.LOGGEDIN;
         saveAuthDetailsToSharedPreferences(authParams);
         SharedPreferencesHelper.get().saveToPrefs(USERNAME, mUsername);
-        Intent loginSuccessfulIntent = new Intent(VOX_INTENT);
-        loginSuccessfulIntent.putExtra(EVENT, LOGIN_SUCCESSFUL);
-        loginSuccessfulIntent.putExtra(DISPLAY_NAME, displayName);
-        mBroadcastManager.sendBroadcast(loginSuccessfulIntent);
+        for (IClientManagerListener listener : mListeners) {
+            listener.onLoginSuccess(displayName);
+        }
+
+        IMessenger messenger = Voximplant.getMessenger();
+        List<MessengerNotifications> notifications = new ArrayList<>();
+        notifications.add(MessengerNotifications.ON_EDIT_MESSAGE);
+        notifications.add(MessengerNotifications.ON_SEND_MESSAGE);
+        if (messenger != null) {
+            messenger.managePushNotifications(notifications);
+        }
     }
 
     @Override
-    public void onLoginFailed(LoginError reason) {
-        mCurrentState = State.CONNECTED;
-        Intent loginFailedIntent = new Intent(VOX_INTENT);
-        loginFailedIntent.putExtra(EVENT, LOGIN_FAILED);
-        loginFailedIntent.putExtra(ERROR_CODE, reason);
-        mBroadcastManager.sendBroadcast(loginFailedIntent);
+    public synchronized void onLoginFailed(LoginError reason) {
+        if (reason == LoginError.TIMEOUT) {
+            mCurrentState = State.CONNECTED;
+        } else if (reason == LoginError.INVALID_STATE && mClient.getClientState() == ClientState.CONNECTED) {
+            mCurrentState = State.CONNECTED;
+        } else if (reason == LoginError.NETWORK_ISSUES) {
+            mCurrentState = State.DISCONNECTED;
+        } else {
+            mCurrentState = State.CONNECTED;
+        }
+
+        for (IClientManagerListener listener : mListeners) {
+            listener.onLoginFailed(reason);
+        }
     }
 
     @Override
