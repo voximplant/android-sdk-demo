@@ -9,6 +9,7 @@ import android.content.Intent;
 
 import com.voximplant.sdk.call.ICall;
 import com.voximplant.sdk.call.ICallListener;
+import com.voximplant.sdk.call.IEndpoint;
 import com.voximplant.sdk.call.IVideoStream;
 import com.voximplant.sdk.call.VideoFlags;
 import com.voximplant.sdk.client.IClient;
@@ -178,6 +179,14 @@ public class VoxCallManager implements IClientIncomingCallListener, ICallListene
         ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
         if (listener != null) {
             listener.onICECompleted();
+        }
+    }
+
+    @Override
+    public void onEndpointAdded(ICall call, IEndpoint endpoint) {
+        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
+        if (listener != null) {
+            listener.onEndpointAdded(endpoint);
         }
     }
 }

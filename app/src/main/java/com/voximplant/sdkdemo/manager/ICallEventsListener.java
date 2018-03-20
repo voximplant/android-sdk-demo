@@ -58,4 +58,7 @@ public interface ICallEventsListener {
         Log.i(APP_TAG, "onICECompleted");
     }
 
+    default void onEndpointAdded(IEndpoint endpoint) {
+        Log.i(APP_TAG, "onEndpointAdded");
+    }
 }

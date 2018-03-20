@@ -25,9 +25,10 @@ public interface CallContract {
         void createLocalVideoView();
         void removeLocalVideoView();
 
-        void createRemoteVideoView(String streamId);
+        void createRemoteVideoView(String streamId, String displayName);
         void removeRemoteVideoView(String streamId);
         void removeAllVideoViews();
+        void updateRemoteVideoView(String streamId, String displayName);
 
         void showVideoControls(boolean show);
         void callDisconnected();
