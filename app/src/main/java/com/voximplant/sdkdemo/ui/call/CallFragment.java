@@ -233,9 +233,9 @@ public class CallFragment extends Fragment implements CallContract.View {
     }
 
     @Override
-    public void createRemoteVideoView(String streamId) {
+    public void createRemoteVideoView(String streamId, String displayName) {
         if (getActivity() != null) {
-            getActivity().runOnUiThread(() -> mPresenter.remoteVideoViewCreated(streamId, mVideoViewsHelper.addRemoteVideoView(streamId)));
+            getActivity().runOnUiThread(() -> mPresenter.remoteVideoViewCreated(streamId, mVideoViewsHelper.addRemoteVideoView(streamId, displayName)));
         }
     }
 
@@ -250,6 +250,13 @@ public class CallFragment extends Fragment implements CallContract.View {
     public void removeAllVideoViews() {
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> mVideoViewsHelper.removeAllVideoViews());
+        }
+    }
+
+    @Override
+    public void updateRemoteVideoView(String streamId, String displayName) {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> mVideoViewsHelper.updateRemoteVideoView(streamId, displayName));
         }
     }
 

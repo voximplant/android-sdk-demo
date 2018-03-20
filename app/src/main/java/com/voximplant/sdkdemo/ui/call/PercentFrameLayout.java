@@ -31,6 +31,7 @@ public class PercentFrameLayout extends ViewGroup {
     private int mYPercent = 0;
     private int mWidthPercent = 100;
     private int mHeightPercent = 100;
+    private int mPadding = 0;
 
     public PercentFrameLayout(Context context) {
         super(context);
@@ -44,11 +45,12 @@ public class PercentFrameLayout extends ViewGroup {
         super(context, attrs, defStyleAttr);
     }
 
-    public void setPosition(int xPercent, int yPercent, int widthPercent, int heightPercent) {
+    public void setPosition(int xPercent, int yPercent, int widthPercent, int heightPercent, int padding) {
         mXPercent = xPercent;
         mYPercent = yPercent;
         mWidthPercent = widthPercent;
         mHeightPercent = heightPercent;
+        mPadding = padding;
     }
 
     @Override
@@ -86,6 +88,7 @@ public class PercentFrameLayout extends ViewGroup {
         final int subLeft = left + width * mXPercent / 100;
         final int subTop = top + height * mYPercent / 100;
 
+        int rendererLeft = 0, rendererTop = 0;
         for (int i = 0; i < getChildCount(); ++i) {
             final View child = getChildAt(i);
             if (child.getVisibility() != GONE) {
@@ -93,9 +96,16 @@ public class PercentFrameLayout extends ViewGroup {
                     final int childWidth = child.getMeasuredWidth();
                     final int childHeight = child.getMeasuredHeight();
                     // Center child both vertically and horizontally.
-                    final int childLeft = subLeft + (subWidth - childWidth) / 2;
-                    final int childTop = subTop + (subHeight - childHeight) / 2;
-                    child.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight);
+                    final int childLeft = subLeft + (subWidth - childWidth) / 2 + mPadding;
+                    final int childTop = subTop + (subHeight - childHeight) / 2 + mPadding;
+                    rendererLeft = childLeft;
+                    rendererTop = childTop;
+                    child.layout(childLeft, childTop, childLeft + childWidth - 2 * mPadding, childTop + childHeight - 2 * mPadding);
+                }
+                if (child instanceof TextView) {
+                    final int childWidth = child.getMeasuredWidth();
+                    final int childHeight = child.getMeasuredHeight();
+                    child.layout(rendererLeft + mPadding, rendererTop + mPadding, rendererLeft + mPadding + childWidth , rendererTop + mPadding + childHeight);
                 }
             }
         }

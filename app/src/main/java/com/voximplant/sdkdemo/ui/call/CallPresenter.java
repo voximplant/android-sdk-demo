@@ -409,6 +409,15 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
             }
         }
     }
+
+    @Override
+    public void onEndpointAdded(IEndpoint endpoint) {
+        ICall call = mCall.get();
+        if (call != null) {
+            Log.i(APP_TAG, "onEndpointAdded: " + call.getCallId() + " " + endpoint.getEndpointId());
+            endpoint.setEndpointListener(this);
+        }
+    }
     //endregion
 
     //region Audio Device events
@@ -435,7 +444,7 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
             mEndpointVideoStreams.put(endpoint, videoStream);
             CallContract.View view = mView.get();
             if (view != null) {
-                view.createRemoteVideoView(videoStream.getVideoStreamId());
+                view.createRemoteVideoView(videoStream.getVideoStreamId(), endpoint.getUserDisplayName());
             }
         }
     }
@@ -447,6 +456,31 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
             CallContract.View view = mView.get();
             if (view != null) {
                 view.removeRemoteVideoView(videoStream.getVideoStreamId());
+            }
+        }
+    }
+
+
+    @Override
+    public void onEndpointRemoved(IEndpoint endpoint) {
+        ICall call = mCall.get();
+        if (call != null) {
+            Log.i(APP_TAG, "onEndpointRemoved: " + call.getCallId() + " " + endpoint.getEndpointId());
+            endpoint.setEndpointListener(null);
+            mEndpointVideoStreams.remove(endpoint);
+        }
+    }
+
+    @Override
+    public void onEndpointInfoUpdated(IEndpoint endpoint) {
+        ICall call = mCall.get();
+        if (call != null) {
+            Log.i(APP_TAG, "onEndpointInfoUpdated: " + call.getCallId() + " " + endpoint.getEndpointId());
+            for (IVideoStream stream : endpoint.getVideoStreams()) {
+                CallContract.View view = mView.get();
+                if (view != null) {
+                    view.updateRemoteVideoView(stream.getVideoStreamId(), endpoint.getUserDisplayName());
+                }
             }
         }
     }
