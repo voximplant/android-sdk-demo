@@ -124,14 +124,18 @@ class VideoViewsHelper {
     }
 
     void showAllViews() {
-        mLocalVideoView.setVisibility(View.VISIBLE);
+        if (mLocalVideoView != null) {
+            mLocalVideoView.setVisibility(View.VISIBLE);
+        }
         for (Map.Entry<String, SurfaceViewRenderer> entry : mRemoteVideoView.entrySet()) {
             entry.getValue().setVisibility(View.VISIBLE);
         }
     }
 
     void hideAllViews() {
-        mLocalVideoView.setVisibility(View.INVISIBLE);
+        if (mLocalVideoView != null) {
+            mLocalVideoView.setVisibility(View.INVISIBLE);
+        }
         for (Map.Entry<String, SurfaceViewRenderer> entry : mRemoteVideoView.entrySet()) {
             entry.getValue().setVisibility(View.INVISIBLE);
         }
