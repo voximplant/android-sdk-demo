@@ -1,9 +1,16 @@
 # android-sdk-demo
 
-This is a demo project for the Voximplant Android SDK. The project highlight all important features
-of the SDK usage: initialization including PUSH notification support, connecting to the
-Voximplant cloud, logging in, initiating and accepting calls. In order to build a demo clone this
-repository and open it as an Android Studio project.
+This is a demo project for the Voximplant Android SDK.
+
+The project highlights all important features of the SDK usage:
+- initialization including PUSH notification support
+- connecting to the Voximplant Cloud
+- logging in
+- initiating and accepting calls audio and video calls
+- video conferencing
+
+
+In order to build a demo clone this repository and open it as an Android Studio project.
 
 ## References
 1. [Voximplant Android SDK documentation](http://voximplant.com/docs/references/mobilesdk/android/)
