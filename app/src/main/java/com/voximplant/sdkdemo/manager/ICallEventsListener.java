@@ -6,6 +6,7 @@ package com.voximplant.sdkdemo.manager;
 
 import android.util.Log;
 
+import com.voximplant.sdk.call.CallStats;
 import com.voximplant.sdk.call.IEndpoint;
 import com.voximplant.sdk.call.IVideoStream;
 
@@ -60,5 +61,9 @@ public interface ICallEventsListener {
 
     default void onEndpointAdded(IEndpoint endpoint) {
         Log.i(APP_TAG, "onEndpointAdded");
+    }
+
+    default void onCallStatsReceived(CallStats callStats) {
+        Log.i(APP_TAG, "onCallStatsReceived");
     }
 }

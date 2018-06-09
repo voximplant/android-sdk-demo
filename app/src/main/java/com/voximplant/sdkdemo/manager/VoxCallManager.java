@@ -7,6 +7,7 @@ package com.voximplant.sdkdemo.manager;
 import android.content.Context;
 import android.content.Intent;
 
+import com.voximplant.sdk.call.CallStats;
 import com.voximplant.sdk.call.ICall;
 import com.voximplant.sdk.call.ICallListener;
 import com.voximplant.sdk.call.IEndpoint;
@@ -187,6 +188,14 @@ public class VoxCallManager implements IClientIncomingCallListener, ICallListene
         ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
         if (listener != null) {
             listener.onEndpointAdded(endpoint);
+        }
+    }
+
+    @Override
+    public void onCallStatsReceived(ICall call, CallStats callStats) {
+        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
+        if (listener != null) {
+            listener.onCallStatsReceived(callStats);
         }
     }
 }

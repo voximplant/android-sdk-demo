@@ -65,6 +65,7 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
         mCameraType = 1;
 
         mCameraManager = Voximplant.getCameraManager(((CallFragment)mView.get()).getContext());
+        mCameraManager.setCamera(mCameraType, mVideoQuality);
         mAudioDeviceManager = Voximplant.getAudioDeviceManager();
     }
 
