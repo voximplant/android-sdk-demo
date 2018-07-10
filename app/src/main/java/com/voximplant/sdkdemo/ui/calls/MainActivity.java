@@ -37,6 +37,7 @@ import com.voximplant.sdkdemo.R;
 import com.voximplant.sdkdemo.ui.call.CallFragment;
 import com.voximplant.sdkdemo.ui.login.LoginActivity;
 import com.voximplant.sdkdemo.ui.settings.SettingsActivity;
+import com.voximplant.sdkdemo.utils.ForegroundCheck;
 import com.voximplant.sdkdemo.utils.FragmentTransactionHelper;
 import com.voximplant.sdkdemo.utils.SharedPreferencesHelper;
 
@@ -69,6 +70,7 @@ public class MainActivity extends AppCompatActivity
     private FragmentTransactionHelper mFragmentTransactionHelper = new FragmentTransactionHelper(this);
     private HashMap<String, String> mActiveCalls = new HashMap<>();
     private AlertDialog mAlertDialog;
+    private ArrayList<String> mDisconnectedCallsInBackground = new ArrayList<>();
 
     private int mPermissionRequestedMode = PERMISSION_NOT_REQUESTED;
     private boolean mIsAudioPermissionsGranted;
@@ -156,6 +158,13 @@ public class MainActivity extends AppCompatActivity
                 boolean withVideo = intent.getBooleanExtra(WITH_VIDEO, false);
                 mPresenter.answerCall(callId, withVideo);
                 break;
+        }
+
+        if (!mDisconnectedCallsInBackground.isEmpty()) {
+            for (String call_id : mDisconnectedCallsInBackground) {
+                removeCallFragment(call_id);
+            }
+            mDisconnectedCallsInBackground.clear();
         }
 
         if (mPermissionRequestedMode == PERMISSION_REQUESTED_VIDEO && mIsAudioPermissionsGranted && mIsVideoPermissionsGranted) {
@@ -251,11 +260,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void removeCallFragment(String callId) {
-        mActiveCalls.remove(callId);
-        removeCallFromNavigationMenu(callId);
-        enableNewCallControls(mActiveCalls.isEmpty());
-        mFragmentTransactionHelper.removeFragment(callId);
-        mFragmentTransactionHelper.showActiveCallFragment();
+        if (ForegroundCheck.get().isForeground()) {
+            mActiveCalls.remove(callId);
+            removeCallFromNavigationMenu(callId);
+            enableNewCallControls(mActiveCalls.isEmpty());
+            mFragmentTransactionHelper.removeFragment(callId);
+            mFragmentTransactionHelper.showActiveCallFragment();
+        } else {
+            mDisconnectedCallsInBackground.add(callId);
+        }
     }
 
     private void showAlertDialog(int resTitle, int resContent) {
