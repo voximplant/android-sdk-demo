@@ -50,6 +50,7 @@ import static com.voximplant.sdkdemo.utils.Constants.CALL_ANSWERED;
 import static com.voximplant.sdkdemo.utils.Constants.CALL_ID;
 import static com.voximplant.sdkdemo.utils.Constants.DISPLAY_NAME;
 import static com.voximplant.sdkdemo.utils.Constants.INCOMING_CALL_RESULT;
+import static com.voximplant.sdkdemo.utils.Constants.INTENT_PROCESSED;
 import static com.voximplant.sdkdemo.utils.Constants.NEW_CALL_FRAGMENT_ID;
 import static com.voximplant.sdkdemo.utils.Constants.USERNAME;
 import static com.voximplant.sdkdemo.utils.Constants.WITH_VIDEO;
@@ -151,13 +152,16 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
 
         Intent intent = getIntent();
-        String callId = intent.getStringExtra(CALL_ID);
-        int result = intent.getIntExtra(INCOMING_CALL_RESULT, -1);
-        switch (result) {
-            case CALL_ANSWERED:
-                boolean withVideo = intent.getBooleanExtra(WITH_VIDEO, false);
-                mPresenter.answerCall(callId, withVideo);
-                break;
+        if (!intent.getBooleanExtra(INTENT_PROCESSED, false)) {
+            intent.putExtra(INTENT_PROCESSED, true);
+            String callId = intent.getStringExtra(CALL_ID);
+            int result = intent.getIntExtra(INCOMING_CALL_RESULT, -1);
+            switch (result) {
+                case CALL_ANSWERED:
+                    boolean withVideo = intent.getBooleanExtra(WITH_VIDEO, false);
+                    mPresenter.answerCall(callId, withVideo);
+                    break;
+            }
         }
 
         if (!mDisconnectedCallsInBackground.isEmpty()) {
