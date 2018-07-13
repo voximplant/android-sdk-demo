@@ -4,6 +4,8 @@
 
 package com.voximplant.sdkdemo.manager;
 
+import android.util.Log;
+
 import com.voximplant.sdk.Voximplant;
 import com.voximplant.sdk.client.AuthParams;
 import com.voximplant.sdk.client.ClientState;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static com.voximplant.sdkdemo.utils.Constants.APP_TAG;
 import static com.voximplant.sdkdemo.utils.Constants.KEY_PREF_PUSH_ENABLE;
 import static com.voximplant.sdkdemo.utils.Constants.LOGIN_ACCESS_EXPIRE;
 import static com.voximplant.sdkdemo.utils.Constants.LOGIN_ACCESS_TOKEN;
@@ -71,7 +74,11 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
         mPassword = password;
         if (mClient != null) {
             if (mCurrentState == State.DISCONNECTED) {
-                mClient.connect(false, mServers);
+                try {
+                    mClient.connect(false, mServers);
+                } catch (IllegalStateException e) {
+                    Log.e(APP_TAG, "login: exception on connect: " + e);
+                }
             }
             if (mCurrentState == State.CONNECTED) {
                 mClient.login(username, password);
@@ -89,7 +96,11 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     private void loginWithToken() {
         if (mClient != null) {
             if (mCurrentState == State.DISCONNECTED) {
-                mClient.connect(false, mServers);
+                try {
+                    mClient.connect(false, mServers);
+                } catch (IllegalStateException e) {
+                    Log.e(APP_TAG, "loginWithToken: exception on connect: " + e);
+                }
             }
             if (mCurrentState == State.CONNECTED) {
                 if (loginTokensExist()) {

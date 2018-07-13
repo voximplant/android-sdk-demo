@@ -26,5 +26,6 @@ public class Constants {
     public static final String KEY_PREF_PUSH_ENABLE = "push_enable";
 
     public static final String INCOMING_CALL_RESULT = "incoming_call_result";
+    public static final String INTENT_PROCESSED = "processed";
     public static final int CALL_ANSWERED = 1;
 }
