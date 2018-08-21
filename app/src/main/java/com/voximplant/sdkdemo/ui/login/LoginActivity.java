@@ -55,8 +55,6 @@ public class LoginActivity extends AppCompatActivity implements LoginContract.Vi
             hideKeyboard(view);
             mLoginPresenter.loginWithPassword(mLoginView.getText().toString(), mPasswordView.getText().toString());
         });
-
-        mLoginPresenter = new LoginPresenter(this);
     }
 
     @Override
