@@ -58,17 +58,9 @@
         </activity>
 
         <service
-            android:name=".push.VoxFirebaseMessagingService"
-            android:stopWithTask="false">
+            android:name=".push.VoxFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-        <service
-            android:name=".push.VoxFirebaseInstanceIDService"
-            android:stopWithTask="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
 

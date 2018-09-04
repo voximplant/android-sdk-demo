@@ -52,7 +52,13 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     public VoxClientManager() {
         mCurrentState = State.DISCONNECTED;
-        mFireBaseToken = FirebaseInstanceId.getInstance().getToken();
+        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task -> {
+            if (!task.isSuccessful()) {
+                Log.e(APP_TAG, "Failed to get firebase push token");
+                return;
+            }
+            mFireBaseToken = task.getResult().getToken();
+        });
     }
 
     public void setClient(IClient client) {

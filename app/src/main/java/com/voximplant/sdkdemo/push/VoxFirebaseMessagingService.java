@@ -28,4 +28,9 @@ public class VoxFirebaseMessagingService extends FirebaseMessagingService {
             }
         }
     }
+
+    @Override
+    public void onNewToken(String token) {
+        Shared.getInstance().getClientManager().firebaseTokenRefreshed(token);
+    }
 }
