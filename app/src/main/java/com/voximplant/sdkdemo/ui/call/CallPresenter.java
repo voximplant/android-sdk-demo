@@ -54,7 +54,7 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
     private VideoQuality mVideoQuality = VideoQuality.VIDEO_QUALITY_MEDIUM;
 
     private IVideoStream mLocalVideoStream;
-    private HashMap<IEndpoint, IVideoStream> mEndpointVideoStreams = new HashMap<>();
+    private HashMap<IVideoStream, IEndpoint> mEndpointVideoStreams = new HashMap<>();
 
     CallPresenter(CallContract.View view, String callId, boolean isIncoming, boolean withVideo) {
         mView = new WeakReference<>(view);
@@ -254,24 +254,24 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
 
     @Override
     public synchronized void remoteVideoViewCreated(String streamId, SurfaceViewRenderer renderer) {
-        for (Map.Entry<IEndpoint, IVideoStream> entry : mEndpointVideoStreams.entrySet()) {
-            if (entry.getValue().getVideoStreamId().equals(streamId)) {
-                entry.getValue().addVideoRenderer(renderer, RenderScaleType.SCALE_FIT);
+        for (Map.Entry<IVideoStream, IEndpoint> entry : mEndpointVideoStreams.entrySet()) {
+            if (entry.getKey().getVideoStreamId().equals(streamId)) {
+                entry.getKey().addVideoRenderer(renderer, RenderScaleType.SCALE_FIT);
             }
         }
     }
 
     @Override
     public synchronized void remoteVideoViewRemoved(String streamId, SurfaceViewRenderer renderer) {
-        IEndpoint endpoint = null;
-        for (Map.Entry<IEndpoint, IVideoStream> entry : mEndpointVideoStreams.entrySet()) {
-            if (entry.getValue().getVideoStreamId().equals(streamId)) {
-                entry.getValue().removeVideoRenderer(renderer);
-                endpoint = entry.getKey();
+        IVideoStream videoStream = null;
+        for (Map.Entry<IVideoStream, IEndpoint> entry : mEndpointVideoStreams.entrySet()) {
+            if (entry.getKey().getVideoStreamId().equals(streamId)) {
+                entry.getKey().removeVideoRenderer(renderer);
+                videoStream = entry.getKey();
             }
         }
-        if (endpoint != null) {
-            mEndpointVideoStreams.remove(endpoint);
+        if (videoStream != null) {
+            mEndpointVideoStreams.remove(videoStream);
         }
     }
 
@@ -442,7 +442,7 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
     public synchronized void onRemoteVideoStreamAdded(IEndpoint endpoint, IVideoStream videoStream) {
         if (endpoint != null && videoStream != null) {
             Log.i(APP_TAG, "onRemoteVideoStreamAdded: "+ endpoint.getEndpointId() + ", stream: " + videoStream.getVideoStreamId());
-            mEndpointVideoStreams.put(endpoint, videoStream);
+            mEndpointVideoStreams.put(videoStream, endpoint);
             CallContract.View view = mView.get();
             if (view != null) {
                 view.createRemoteVideoView(videoStream.getVideoStreamId(), endpoint.getUserDisplayName());
@@ -468,7 +468,6 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
         if (call != null) {
             Log.i(APP_TAG, "onEndpointRemoved: " + call.getCallId() + " " + endpoint.getEndpointId());
             endpoint.setEndpointListener(null);
-            mEndpointVideoStreams.remove(endpoint);
         }
     }
 
