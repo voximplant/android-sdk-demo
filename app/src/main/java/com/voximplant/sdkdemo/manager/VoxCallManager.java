@@ -6,6 +6,7 @@ package com.voximplant.sdkdemo.manager;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import com.voximplant.sdk.call.CallStats;
 import com.voximplant.sdk.call.ICall;
@@ -15,7 +16,9 @@ import com.voximplant.sdk.call.IVideoStream;
 import com.voximplant.sdk.call.VideoFlags;
 import com.voximplant.sdk.client.IClient;
 import com.voximplant.sdk.client.IClientIncomingCallListener;
+import com.voximplant.sdkdemo.ui.call.CallService;
 import com.voximplant.sdkdemo.ui.incomingcall.IncomingCallActivity;
+import com.voximplant.sdkdemo.utils.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -75,9 +78,32 @@ public class VoxCallManager implements IClientIncomingCallListener, ICallListene
         return null;
     }
 
-    public void removeCall(String callId) {
+    private void removeCall(String callId) {
         if (mCalls.containsKey(callId)) {
             mCalls.remove(callId);
+        }
+    }
+
+    public void startForegroundCallService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent intent = new Intent(mAppContext, CallService.class);
+            intent.setAction(Constants.ACTION_FOREGROUND_SERVICE_START);
+            intent.putExtra(Constants.SERVICE_NOTIFICATION_DETAILS, mCalls.size());
+            mAppContext.startForegroundService(intent);
+        }
+    }
+
+    public void stopForegroundService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (mCalls.isEmpty()) {
+                Intent intent = new Intent(mAppContext, CallService.class);
+                intent.setAction(Constants.ACTION_FOREGROUND_SERVICE_STOP);
+                mAppContext.stopService(intent);
+            } else {
+                // Do not stop foreground service if there are other calls in progress
+                // Just update the notification
+                startForegroundCallService();
+            }
         }
     }
 
@@ -103,11 +129,11 @@ public class VoxCallManager implements IClientIncomingCallListener, ICallListene
 
     @Override
     public void onCallDisconnected(ICall call, Map<String, String> headers, boolean answeredElsewhere) {
+        removeCall(call.getCallId());
         ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
         if (listener != null) {
             listener.onCallDisconnected(headers, answeredElsewhere);
         }
-        removeCall(call.getCallId());
     }
 
     @Override
