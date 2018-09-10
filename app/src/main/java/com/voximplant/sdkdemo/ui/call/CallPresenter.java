@@ -326,6 +326,7 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
         if (call == null) {
             return;
         }
+        mCallManager.startForegroundCallService();
         Log.i(APP_TAG, "onCallConnected: " + call.getCallId());
         CallContract.View view = mView.get();
         if (view != null) {
@@ -335,6 +336,7 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
 
     @Override
     public void onCallDisconnected(Map<String, String> headers, boolean answeredElsewhere) {
+        mCallManager.stopForegroundService();
         ICall call = mCall.get();
         if (call != null) {
             Log.i(APP_TAG, "onCallDisconnected: " + call.getCallId());

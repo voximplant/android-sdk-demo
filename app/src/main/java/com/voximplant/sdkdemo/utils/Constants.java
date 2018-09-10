@@ -28,4 +28,10 @@ public class Constants {
     public static final String INCOMING_CALL_RESULT = "incoming_call_result";
     public static final String INTENT_PROCESSED = "processed";
     public static final int CALL_ANSWERED = 1;
+
+    public static final String ACTION_FOREGROUND_SERVICE_START = "com.voximplant.sdkdemo.service_start";
+    public static final String ACTION_FOREGROUND_SERVICE_STOP = "com.voximplant.sdkdemo.service_stop";
+
+    public static final String NOTIFICATION_CHANNEL_ID = "VoximplantChannel";
+    public static final String SERVICE_NOTIFICATION_DETAILS = "service_notification_details";
 }

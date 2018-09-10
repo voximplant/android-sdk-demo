@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
         android:name=".SDKDemoApplication"
@@ -64,6 +65,7 @@
             </intent-filter>
         </service>
 
+        <service android:name=".ui.call.CallService"> </service>
 
     </application>
 
