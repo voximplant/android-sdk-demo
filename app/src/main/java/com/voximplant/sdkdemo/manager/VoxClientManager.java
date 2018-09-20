@@ -34,24 +34,15 @@ import static com.voximplant.sdkdemo.utils.Constants.REFRESH_TIME;
 import static com.voximplant.sdkdemo.utils.Constants.USERNAME;
 
 public class VoxClientManager implements IClientSessionListener, IClientLoginListener {
-
-    public enum State {
-        DISCONNECTED,
-        CONNECTED,
-        LOGGEDIN
-    }
-
     private IClient mClient = null;
     private CopyOnWriteArrayList<IClientManagerListener> mListeners = new CopyOnWriteArrayList<>();
 
-    private State mCurrentState;
     private String mUsername = null;
     private String mPassword = null;
     private String mFireBaseToken;
     private ArrayList<String> mServers = new ArrayList<>();
 
     public VoxClientManager() {
-        mCurrentState = State.DISCONNECTED;
         FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task -> {
             if (!task.isSuccessful()) {
                 Log.e(APP_TAG, "Failed to get firebase push token");
@@ -75,45 +66,39 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
         mListeners.remove(listener);
     }
 
-    public State getCurrentState() {
-        return mCurrentState;
-    }
-
     public void login(String username, String password) {
         mUsername = username;
         mPassword = password;
         if (mClient != null) {
-            if (mCurrentState == State.DISCONNECTED) {
+            if (mClient.getClientState() == ClientState.DISCONNECTED) {
                 try {
                     mClient.connect(false, mServers);
                 } catch (IllegalStateException e) {
                     Log.e(APP_TAG, "login: exception on connect: " + e);
                 }
             }
-            if (mCurrentState == State.CONNECTED) {
+            if (mClient.getClientState() == ClientState.CONNECTED) {
                 mClient.login(username, password);
             }
         }
     }
 
     public void logout() {
-        if (mCurrentState == State.LOGGEDIN && mClient != null) {
-            enablePushNotifications(false);
+        if (mClient != null && mClient.getClientState() == ClientState.LOGGED_IN) {
             mClient.disconnect();
-            mCurrentState = State.DISCONNECTED;
         }
     }
 
     private void loginWithToken() {
         if (mClient != null) {
-            if (mCurrentState == State.DISCONNECTED) {
+            if (mClient.getClientState() == ClientState.DISCONNECTED) {
                 try {
                     mClient.connect(false, mServers);
                 } catch (IllegalStateException e) {
                     Log.e(APP_TAG, "loginWithToken: exception on connect: " + e);
                 }
             }
-            if (mCurrentState == State.CONNECTED) {
+            if (mClient.getClientState() == ClientState.CONNECTED) {
                 if (loginTokensExist()) {
                     mUsername = SharedPreferencesHelper.get().getStringFromPrefs(USERNAME);
                     if (!isTokenExpired(SharedPreferencesHelper.get().getLongFromPrefs(LOGIN_ACCESS_EXPIRE))) {
@@ -166,7 +151,6 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     @Override
     public void onConnectionEstablished() {
-        mCurrentState = State.CONNECTED;
         if (mClient == null) {
             return;
         }
@@ -179,7 +163,6 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     @Override
     public synchronized void onConnectionFailed(String error) {
-        mCurrentState = State.DISCONNECTED;
         for (IClientManagerListener listener : mListeners) {
             listener.onConnectionFailed();
         }
@@ -187,7 +170,6 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     @Override
     public synchronized void onConnectionClosed() {
-        mCurrentState = State.DISCONNECTED;
         for (IClientManagerListener listener : mListeners) {
             listener.onConnectionClosed();
         }
@@ -195,7 +177,6 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     @Override
     public synchronized void onLoginSuccessful(String displayName, AuthParams authParams) {
-        mCurrentState = State.LOGGEDIN;
         enablePushNotifications(SharedPreferencesHelper.get().getBooleanFromPrefs(KEY_PREF_PUSH_ENABLE));
         saveAuthDetailsToSharedPreferences(authParams);
         SharedPreferencesHelper.get().saveToPrefs(USERNAME, mUsername);
@@ -214,16 +195,6 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     @Override
     public synchronized void onLoginFailed(LoginError reason) {
-        if (reason == LoginError.TIMEOUT) {
-            mCurrentState = State.CONNECTED;
-        } else if (reason == LoginError.INVALID_STATE && mClient.getClientState() == ClientState.CONNECTED) {
-            mCurrentState = State.CONNECTED;
-        } else if (reason == LoginError.NETWORK_ISSUES) {
-            mCurrentState = State.DISCONNECTED;
-        } else {
-            mCurrentState = State.CONNECTED;
-        }
-
         for (IClientManagerListener listener : mListeners) {
             listener.onLoginFailed(reason);
         }
