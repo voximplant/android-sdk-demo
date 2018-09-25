@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.voximplant.sdk.Voximplant;
 import com.voximplant.sdk.call.CallException;
+import com.voximplant.sdk.call.CallSettings;
 import com.voximplant.sdk.call.ICall;
 import com.voximplant.sdk.call.ICallCompletionHandler;
 import com.voximplant.sdk.call.IEndpoint;
@@ -81,7 +82,9 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
         setupListeners(true);
         if (mIsIncoming) {
             try {
-                call.answer(null, new VideoFlags(mIsVideoReceived, mIsVideoSent), null);
+                CallSettings callSettings = new CallSettings();
+                callSettings.videoFlags = new VideoFlags(mIsVideoReceived, mIsVideoSent);
+                call.answer(callSettings);
             } catch (CallException e) {
                 Log.e(APP_TAG, "CallPresenter: answer exception: " + e.getMessage());
                 CallContract.View view = mView.get();
@@ -91,7 +94,7 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
             }
         } else {
             try {
-                call.start(null);
+                call.start();
             } catch (CallException e) {
                 Log.e(APP_TAG, "CallPresenter: startException: " + e.getMessage());
                 CallContract.View view = mView.get();

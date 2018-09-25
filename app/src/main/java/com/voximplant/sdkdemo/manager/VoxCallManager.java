@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
+import com.voximplant.sdk.call.CallSettings;
 import com.voximplant.sdk.call.CallStats;
 import com.voximplant.sdk.call.ICall;
 import com.voximplant.sdk.call.ICallListener;
@@ -57,7 +58,9 @@ public class VoxCallManager implements IClientIncomingCallListener, ICallListene
     }
 
     public String createCall(String user, VideoFlags videoFlags) {
-        ICall call = mClient.callTo(user, videoFlags, null);
+        CallSettings callSettings = new CallSettings();
+        callSettings.videoFlags = videoFlags;
+        ICall call = mClient.call(user, callSettings);
         if (call != null) {
             mCalls.put(call.getCallId(), call);
             return call.getCallId();
