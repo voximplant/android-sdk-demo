@@ -68,27 +68,6 @@ public class NotificationHelper {
                 .build();
     }
 
-	public int buildMessengerNotification(IMessengerEvent event, Context context) {
-		NotificationCompat.Builder builder = null;
-		if (event.getMessengerEventType() == MessengerEventType.ON_SEND_MESSAGE) {
-			IMessageEvent messageEvent = (IMessageEvent)event;
-			builder = new NotificationCompat.Builder(context)
-					.setSmallIcon(R.mipmap.ic_launcher_round)
-					.setContentTitle("New message from " + messageEvent.getMessage().getSender())
-					.setContentText(messageEvent.getMessage().getText())
-					.setPriority(Notification.PRIORITY_HIGH)
-					.setAutoCancel(true);
-		}
-
-		if (builder != null) {
-			mNotificationManager.notify(notificationId, builder.build());
-			notificationId++;
-			return notificationId;
-		} else {
-			return -1;
-		}
-	}
-
 	public static void cancelNotification(int notificationId) {
 		if (notificationId > -1) {
 			mNotificationManager.cancel(notificationId);

@@ -153,14 +153,6 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
         for (IClientManagerListener listener : mListeners) {
             listener.onLoginSuccess(displayName);
         }
-
-        IMessenger messenger = Voximplant.getMessenger();
-        List<MessengerNotifications> notifications = new ArrayList<>();
-        notifications.add(MessengerNotifications.ON_EDIT_MESSAGE);
-        notifications.add(MessengerNotifications.ON_SEND_MESSAGE);
-        if (messenger != null) {
-            messenger.managePushNotifications(notifications);
-        }
     }
 
     @Override
