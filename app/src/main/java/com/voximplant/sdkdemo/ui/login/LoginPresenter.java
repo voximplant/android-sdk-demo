@@ -4,6 +4,7 @@
 
 package com.voximplant.sdkdemo.ui.login;
 
+import com.voximplant.sdk.client.ClientState;
 import com.voximplant.sdk.client.LoginError;
 import com.voximplant.sdkdemo.R;
 import com.voximplant.sdkdemo.Shared;
@@ -33,6 +34,9 @@ public class LoginPresenter implements LoginContract.Presenter, IClientManagerLi
         LoginContract.View view = mView.get();
         if (previousUser != null && view != null) {
             view.fillUsername(previousUser.replace(POSTFIX, ""));
+        }
+        if (mClientManager.getState() == ClientState.LOGGED_IN && view != null) {
+            view.loginSuccess(mClientManager.getDisplayName());
         }
     }
 

@@ -7,19 +7,15 @@ package com.voximplant.sdkdemo.manager;
 import android.util.Log;
 
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.voximplant.sdk.Voximplant;
 import com.voximplant.sdk.client.AuthParams;
 import com.voximplant.sdk.client.ClientState;
 import com.voximplant.sdk.client.IClient;
 import com.voximplant.sdk.client.IClientLoginListener;
 import com.voximplant.sdk.client.IClientSessionListener;
 import com.voximplant.sdk.client.LoginError;
-import com.voximplant.sdk.messaging.IMessenger;
-import com.voximplant.sdk.messaging.MessengerNotifications;
 import com.voximplant.sdkdemo.utils.SharedPreferencesHelper;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -41,6 +37,7 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     private String mPassword = null;
     private String mFireBaseToken;
     private ArrayList<String> mServers = new ArrayList<>();
+    private String mDisplayName = null;
 
     public VoxClientManager() {
         FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(task -> {
@@ -87,6 +84,14 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
         if (mClient != null && mClient.getClientState() == ClientState.LOGGED_IN) {
             mClient.disconnect();
         }
+    }
+
+    public ClientState getState() {
+        return mClient.getClientState();
+    }
+
+    public String getDisplayName() {
+        return mDisplayName;
     }
 
     private void loginWithToken() {
@@ -170,6 +175,8 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     @Override
     public synchronized void onConnectionClosed() {
+        mPassword = null;
+        mDisplayName = null;
         for (IClientManagerListener listener : mListeners) {
             listener.onConnectionClosed();
         }
@@ -180,6 +187,7 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
         enablePushNotifications(SharedPreferencesHelper.get().getBooleanFromPrefs(KEY_PREF_PUSH_ENABLE));
         saveAuthDetailsToSharedPreferences(authParams);
         SharedPreferencesHelper.get().saveToPrefs(USERNAME, mUsername);
+        mDisplayName = displayName;
         for (IClientManagerListener listener : mListeners) {
             listener.onLoginSuccess(displayName);
         }
