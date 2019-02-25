@@ -6,19 +6,15 @@ package com.voximplant.sdkdemo.manager;
 
 import android.util.Log;
 
-import com.voximplant.sdk.Voximplant;
 import com.voximplant.sdk.client.AuthParams;
 import com.voximplant.sdk.client.ClientState;
 import com.voximplant.sdk.client.IClient;
 import com.voximplant.sdk.client.IClientLoginListener;
 import com.voximplant.sdk.client.IClientSessionListener;
 import com.voximplant.sdk.client.LoginError;
-import com.voximplant.sdk.messaging.IMessenger;
-import com.voximplant.sdk.messaging.MessengerNotifications;
 import com.voximplant.sdkdemo.utils.SharedPreferencesHelper;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.voximplant.sdkdemo.utils.Constants.APP_TAG;
@@ -37,6 +33,7 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     private String mUsername = null;
     private String mPassword = null;
     private ArrayList<String> mServers = new ArrayList<>();
+    private String mDisplayName = null;
 
     public VoxClientManager() {
 
@@ -77,6 +74,14 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
         if (mClient != null && mClient.getClientState() == ClientState.LOGGED_IN) {
             mClient.disconnect();
         }
+    }
+
+    public ClientState getState() {
+        return mClient.getClientState();
+    }
+
+    public String getDisplayName() {
+        return mDisplayName;
     }
 
     private void loginWithToken() {
@@ -141,6 +146,8 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
 
     @Override
     public synchronized void onConnectionClosed() {
+        mPassword = null;
+        mDisplayName = null;
         for (IClientManagerListener listener : mListeners) {
             listener.onConnectionClosed();
         }
@@ -150,6 +157,7 @@ public class VoxClientManager implements IClientSessionListener, IClientLoginLis
     public synchronized void onLoginSuccessful(String displayName, AuthParams authParams) {
         saveAuthDetailsToSharedPreferences(authParams);
         SharedPreferencesHelper.get().saveToPrefs(USERNAME, mUsername);
+        mDisplayName = displayName;
         for (IClientManagerListener listener : mListeners) {
             listener.onLoginSuccess(displayName);
         }
