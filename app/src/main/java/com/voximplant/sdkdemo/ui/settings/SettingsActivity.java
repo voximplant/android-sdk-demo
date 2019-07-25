@@ -10,18 +10,14 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBar;
+import androidx.appcompat.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.view.MenuItem;
-import android.support.v4.app.NavUtils;
+import androidx.core.app.NavUtils;
 
 import com.voximplant.sdkdemo.R;
-import com.voximplant.sdkdemo.Shared;
-import com.voximplant.sdkdemo.manager.VoxClientManager;
 
 import java.util.List;
-
-import static com.voximplant.sdkdemo.utils.Constants.KEY_PREF_PUSH_ENABLE;
 
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 

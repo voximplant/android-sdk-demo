@@ -9,8 +9,8 @@ import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -127,13 +127,10 @@ public class LoginActivity extends AppCompatActivity implements LoginContract.Vi
     public void showError(int error) {
         runOnUiThread(() -> {
             int titleRes;
-            switch (error) {
-                case R.string.alert_content_connection_failed:
-                    titleRes = R.string.alert_title_connection_failed;
-                    break;
-                default:
-                    titleRes = R.string.alert_login_failed;
-                    break;
+            if (error == R.string.alert_content_connection_failed) {
+                titleRes = R.string.alert_title_connection_failed;
+            } else {
+                titleRes = R.string.alert_login_failed;
             }
 
             new AlertDialog.Builder(this)
