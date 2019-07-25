@@ -11,6 +11,7 @@ import com.voximplant.sdk.call.CallException;
 import com.voximplant.sdk.call.CallSettings;
 import com.voximplant.sdk.call.ICall;
 import com.voximplant.sdk.call.ICallCompletionHandler;
+import com.voximplant.sdk.call.ICallListener;
 import com.voximplant.sdk.call.IEndpoint;
 import com.voximplant.sdk.call.IEndpointListener;
 import com.voximplant.sdk.call.IVideoStream;
@@ -24,7 +25,6 @@ import com.voximplant.sdk.hardware.ICameraManager;
 import com.voximplant.sdk.hardware.VideoQuality;
 import com.voximplant.sdkdemo.R;
 import com.voximplant.sdkdemo.Shared;
-import com.voximplant.sdkdemo.manager.ICallEventsListener;
 import com.voximplant.sdkdemo.manager.VoxCallManager;
 
 import org.webrtc.SurfaceViewRenderer;
@@ -37,7 +37,7 @@ import java.util.Map;
 
 import static com.voximplant.sdkdemo.utils.Constants.APP_TAG;
 
-public class CallPresenter implements CallContract.Presenter, ICallEventsListener,
+public class CallPresenter implements CallContract.Presenter, ICallListener,
         ICameraEventsListener, IAudioDeviceEventsListener, IEndpointListener {
     private WeakReference<CallContract.View> mView;
     private WeakReference<ICall> mCall;
@@ -125,14 +125,14 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
             if (endpoint != null) {
                 endpoint.setEndpointListener(this);
             }
-            mCallManager.addCallEventListener(call.getCallId(), this);
+            call.addCallListener(this);
             mCameraManager.addCameraEventsListener(this);
             mAudioDeviceManager.addAudioDeviceEventsListener(this);
         } else {
             if (endpoint != null) {
                 endpoint.setEndpointListener(null);
             }
-            mCallManager.removeCallEventListener(call.getCallId(), this);
+            call.removeCallListener(this);
             mCameraManager.removeCameraEventsListener(this);
             mAudioDeviceManager.removeAudioDeviceEventsListener(this);
         }
@@ -295,16 +295,6 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
 
     //region Camera Events
     @Override
-    public void onCameraError(String errorDescription) {
-
-    }
-
-    @Override
-    public void onCameraDisconnected() {
-
-    }
-
-    @Override
     public void onCameraSwitchDone(boolean isFrontCamera) {
         mCameraType = isFrontCamera ? 1 : 0;
         CallContract.View view = mView.get();
@@ -324,11 +314,7 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
 
     //region Call Events
     @Override
-    public void onCallConnected(Map<String, String> headers) {
-        ICall call = mCall.get();
-        if (call == null) {
-            return;
-        }
+    public void onCallConnected(ICall call, Map<String, String> headers) {
         mCallManager.startForegroundCallService();
         Log.i(APP_TAG, "onCallConnected: " + call.getCallId());
         CallContract.View view = mView.get();
@@ -338,91 +324,71 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
     }
 
     @Override
-    public void onCallDisconnected(Map<String, String> headers, boolean answeredElsewhere) {
+    public void onCallDisconnected(ICall call, Map<String, String> headers, boolean answeredElsewhere) {
+        mCallManager.removeCall(call.getCallId());
         mCallManager.stopForegroundService();
-        ICall call = mCall.get();
-        if (call != null) {
-            Log.i(APP_TAG, "onCallDisconnected: " + call.getCallId());
-            setupListeners(false);
+        Log.i(APP_TAG, "onCallDisconnected: " + call.getCallId());
+        setupListeners(false);
+        CallContract.View view = mView.get();
+        if (view != null) {
+            view.removeAllVideoViews();
+            view.callDisconnected();
+        }
+    }
+
+    @Override
+    public void onCallAudioStarted(ICall call) {
+        Log.i(APP_TAG, "onCallAudioStarted: " + call.getCallId());
+        CallContract.View view = mView.get();
+        if (view != null) {
+            view.updateCallStatus(R.string.audio_is_started);
+        }
+    }
+
+    @Override
+    public void onCallRinging(ICall call, Map<String, String> headers) {
+        Log.i(APP_TAG, "onCallRinging: " + call.getCallId());
+        CallContract.View view = mView.get();
+        if (view != null) {
+            view.updateCallStatus(R.string.call_ringing);
+        }
+    }
+
+    @Override
+    public void onCallFailed(ICall call, int code, final String description, Map<String, String> headers) {
+        Log.i(APP_TAG, "onCallFailed: " + call.getCallId() + ", code: " + code);
+        setupListeners(false);
+        if (code != 409) {
             CallContract.View view = mView.get();
             if (view != null) {
-                view.removeAllVideoViews();
-                view.callDisconnected();
+                view.callFailed(description);
             }
         }
     }
 
     @Override
-    public void onCallAudioStarted() {
-        ICall call = mCall.get();
-        if (call != null) {
-            Log.i(APP_TAG, "onCallAudioStarted: " + call.getCallId());
-            CallContract.View view = mView.get();
-            if (view != null) {
-                view.updateCallStatus(R.string.audio_is_started);
-            }
+    public void onLocalVideoStreamAdded(ICall call, IVideoStream videoStream) {
+        Log.i(APP_TAG, "onLocalVideoStreamAdded: " + call.getCallId());
+        mLocalVideoStream = videoStream;
+        CallContract.View view = mView.get();
+        if (view != null) {
+            view.createLocalVideoView();
         }
     }
 
     @Override
-    public void onCallRinging(Map<String, String> headers) {
-        ICall call = mCall.get();
-        if (call != null) {
-            Log.i(APP_TAG, "onCallRinging: " + call.getCallId());
-            CallContract.View view = mView.get();
-            if (view != null) {
-                view.updateCallStatus(R.string.call_ringing);
-            }
+    public void onLocalVideoStreamRemoved(ICall call, IVideoStream videoStream) {
+        Log.i(APP_TAG, "onLocalVideoStreamRemoved: " + call.getCallId());
+        CallContract.View view = mView.get();
+        if (view != null) {
+            view.removeLocalVideoView();
         }
     }
 
     @Override
-    public void onCallFailed(int code, final String description, Map<String, String> headers) {
-        ICall call = mCall.get();
-        if (call != null) {
-            Log.i(APP_TAG, "onCallFailed: " + call.getCallId() + ", code: " + code);
-            setupListeners(false);
-            if (code != 409) {
-                CallContract.View view = mView.get();
-                if (view != null) {
-                    view.callFailed(description);
-                }
-            }
-        }
-    }
-
-    @Override
-    public void onLocalVideoStreamAdded(IVideoStream videoStream) {
-        ICall call = mCall.get();
-        if (call != null) {
-            Log.i(APP_TAG, "onLocalVideoStreamAdded: " + call.getCallId());
-            mLocalVideoStream = videoStream;
-            CallContract.View view = mView.get();
-            if (view != null) {
-                view.createLocalVideoView();
-            }
-        }
-    }
-
-    @Override
-    public void onLocalVideoStreamRemoved(IVideoStream videoStream) {
-        ICall call = mCall.get();
-        if (call != null) {
-            Log.i(APP_TAG, "onLocalVideoStreamRemoved: " + call.getCallId());
-            CallContract.View view = mView.get();
-            if (view != null) {
-                view.removeLocalVideoView();
-            }
-        }
-    }
-
-    @Override
-    public void onEndpointAdded(IEndpoint endpoint) {
-        ICall call = mCall.get();
-        if (call != null) {
-            Log.i(APP_TAG, "onEndpointAdded: " + call.getCallId() + " " + endpoint.getEndpointId());
-            endpoint.setEndpointListener(this);
-        }
+    public void onEndpointAdded(ICall call, IEndpoint endpoint) {
+        Log.i(APP_TAG, "onEndpointAdded: " + call.getCallId() + " " + endpoint.getEndpointId());
+        endpoint.setEndpointListener(this);
     }
     //endregion
 
@@ -436,10 +402,9 @@ public class CallPresenter implements CallContract.Presenter, ICallEventsListene
     }
 
     @Override
-    public void onAudioDeviceListChanged(List<AudioDevice> newDeviceList) {
+    public void onAudioDeviceListChanged(List<AudioDevice> list) {
 
     }
-
     //endregion
 
     //region Endpoint events

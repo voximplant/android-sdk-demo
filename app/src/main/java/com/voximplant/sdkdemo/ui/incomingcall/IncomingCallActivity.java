@@ -9,9 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -25,7 +25,7 @@ import com.voximplant.sdkdemo.utils.SharedPreferencesHelper;
 
 import java.util.ArrayList;
 
-import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
+import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
 import static com.voximplant.sdkdemo.utils.Constants.CALL_ANSWERED;
 import static com.voximplant.sdkdemo.utils.Constants.CALL_ID;
 import static com.voximplant.sdkdemo.utils.Constants.DISPLAY_NAME;

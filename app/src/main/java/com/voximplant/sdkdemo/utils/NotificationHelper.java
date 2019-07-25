@@ -9,17 +9,12 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
+import androidx.core.app.NotificationCompat;
 
-import com.voximplant.sdk.messaging.IMessageEvent;
-import com.voximplant.sdk.messaging.IMessengerEvent;
-import com.voximplant.sdk.messaging.MessengerEventType;
 import com.voximplant.sdkdemo.R;
-import com.voximplant.sdkdemo.SDKDemoApplication;
 import com.voximplant.sdkdemo.ui.calls.MainActivity;
 
 public class NotificationHelper {

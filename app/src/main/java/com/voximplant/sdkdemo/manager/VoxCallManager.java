@@ -33,28 +33,11 @@ public class VoxCallManager implements IClientIncomingCallListener, ICallListene
     private HashMap<String, ICall> mCalls = new HashMap<>();
     private final IClient mClient;
     private final Context mAppContext;
-    private ConcurrentHashMap<String, ICallEventsListener> mCallEventsListeners = new ConcurrentHashMap<>();
 
     public VoxCallManager(IClient client, Context appContext) {
         mClient = client;
         mAppContext = appContext;
         mClient.setClientIncomingCallListener(this);
-    }
-
-    public void addCallEventListener(String callId, ICallEventsListener listener) {
-        ICall call = mCalls.get(callId);
-        if (call != null) {
-            call.addCallListener(this);
-            mCallEventsListeners.put(callId, listener);
-        }
-    }
-
-    public void removeCallEventListener(String callId, ICallEventsListener listener) {
-        ICall call = mCalls.get(callId);
-        if (call != null) {
-            call.removeCallListener(this);
-            mCallEventsListeners.remove(callId, listener);
-        }
     }
 
     public String createCall(String user, VideoFlags videoFlags) {
@@ -81,10 +64,8 @@ public class VoxCallManager implements IClientIncomingCallListener, ICallListene
         return null;
     }
 
-    private void removeCall(String callId) {
-        if (mCalls.containsKey(callId)) {
-            mCalls.remove(callId);
-        }
+    public void removeCall(String callId) {
+        mCalls.remove(callId);
     }
 
     public void startForegroundCallService() {
@@ -119,112 +100,5 @@ public class VoxCallManager implements IClientIncomingCallListener, ICallListene
         incomingCallIntent.putExtra(WITH_VIDEO, video);
         incomingCallIntent.putExtra(DISPLAY_NAME, call.getEndpoints().get(0).getUserDisplayName());
         mAppContext.startActivity(incomingCallIntent);
-    }
-
-
-    @Override
-    public void onCallConnected(ICall call, Map<String, String> headers) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onCallConnected(headers);
-        }
-    }
-
-    @Override
-    public void onCallDisconnected(ICall call, Map<String, String> headers, boolean answeredElsewhere) {
-        removeCall(call.getCallId());
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onCallDisconnected(headers, answeredElsewhere);
-        }
-    }
-
-    @Override
-    public void onCallRinging(ICall call, Map<String, String> headers) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onCallRinging(headers);
-        }
-    }
-
-    @Override
-    public void onCallFailed(ICall call, int code, String description, Map<String, String> headers) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onCallFailed(code, description, headers);
-        }
-        removeCall(call.getCallId());
-    }
-
-    @Override
-    public void onCallAudioStarted(ICall call) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onCallAudioStarted();
-        }
-    }
-
-    @Override
-    public void onSIPInfoReceived(ICall call, String type, String content, Map<String, String> headers) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onSIPInfoReceived(type, content, headers);
-        }
-    }
-
-    @Override
-    public void onMessageReceived(ICall call, String text) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onMessageReceived(text);
-        }
-    }
-
-    @Override
-    public void onLocalVideoStreamAdded(ICall call, IVideoStream videoStream) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onLocalVideoStreamAdded(videoStream);
-        }
-    }
-
-    @Override
-    public void onLocalVideoStreamRemoved(ICall call, IVideoStream videoStream) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onLocalVideoStreamRemoved(videoStream);
-        }
-    }
-
-    @Override
-    public void onICETimeout(ICall call) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onICETimeout();
-        }
-    }
-
-    @Override
-    public void onICECompleted(ICall call) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onICECompleted();
-        }
-    }
-
-    @Override
-    public void onEndpointAdded(ICall call, IEndpoint endpoint) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onEndpointAdded(endpoint);
-        }
-    }
-
-    @Override
-    public void onCallStatsReceived(ICall call, CallStats callStats) {
-        ICallEventsListener listener = mCallEventsListeners.get(call.getCallId());
-        if (listener != null) {
-            listener.onCallStatsReceived(callStats);
-        }
     }
 }

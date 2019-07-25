@@ -7,21 +7,16 @@ package com.voximplant.sdkdemo.ui.calls;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import androidx.annotation.NonNull;
+import com.google.android.material.navigation.NavigationView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -45,7 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static android.support.v4.content.PermissionChecker.PERMISSION_GRANTED;
+import static androidx.core.content.PermissionChecker.PERMISSION_GRANTED;
 import static com.voximplant.sdkdemo.utils.Constants.CALL_ANSWERED;
 import static com.voximplant.sdkdemo.utils.Constants.CALL_ID;
 import static com.voximplant.sdkdemo.utils.Constants.DISPLAY_NAME;
@@ -61,8 +56,6 @@ public class MainActivity extends AppCompatActivity
     private final static int PERMISSION_REQUESTED_AUDIO = 2;
     private final static int PERMISSION_REQUESTED_VIDEO = 3;
 
-
-    private Menu mNavigationMenu;
     private SubMenu mNavigationSubMenu;
     private EditText mCallToView;
     private ImageButton mAudioCallButton;
@@ -92,9 +85,9 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-        mNavigationMenu = navigationView.getMenu();
-        mNavigationMenu.addSubMenu(R.string.active_calls);
-        mNavigationSubMenu = mNavigationMenu.getItem(2).getSubMenu();
+        Menu navigationMenu = navigationView.getMenu();
+        navigationMenu.addSubMenu(R.string.active_calls);
+        mNavigationSubMenu = navigationMenu.getItem(2).getSubMenu();
 
         View headerView = navigationView.getHeaderView(0);
         TextView mDisplayName = headerView.findViewById(R.id.displayName);
@@ -156,11 +149,9 @@ public class MainActivity extends AppCompatActivity
             intent.putExtra(INTENT_PROCESSED, true);
             String callId = intent.getStringExtra(CALL_ID);
             int result = intent.getIntExtra(INCOMING_CALL_RESULT, -1);
-            switch (result) {
-                case CALL_ANSWERED:
-                    boolean withVideo = intent.getBooleanExtra(WITH_VIDEO, false);
-                    mPresenter.answerCall(callId, withVideo);
-                    break;
+            if (result == CALL_ANSWERED) {
+                boolean withVideo = intent.getBooleanExtra(WITH_VIDEO, false);
+                mPresenter.answerCall(callId, withVideo);
             }
         }
 
@@ -276,18 +267,16 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showAlertDialog(int resTitle, int resContent) {
-        runOnUiThread(() -> {
-            mAlertDialog = new AlertDialog.Builder(MainActivity.this)
-                    .setTitle(resTitle)
-                    .setMessage(resContent)
-                    .setPositiveButton(R.string.alert_positive_button, (dialog, which) -> {
-                        mPresenter.logout();
-                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                        startActivity(intent);
-                        finish();
-                    })
-                    .show();
-        });
+        runOnUiThread(() -> mAlertDialog = new AlertDialog.Builder(MainActivity.this)
+                .setTitle(resTitle)
+                .setMessage(resContent)
+                .setPositiveButton(R.string.alert_positive_button, (dialog, which) -> {
+                    mPresenter.logout();
+                    Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                })
+                .show());
     }
 
     private void hideKeyboard(View v) {
