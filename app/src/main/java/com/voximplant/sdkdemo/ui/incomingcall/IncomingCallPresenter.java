@@ -8,9 +8,9 @@ import android.util.Log;
 
 import com.voximplant.sdk.call.CallException;
 import com.voximplant.sdk.call.ICall;
+import com.voximplant.sdk.call.ICallListener;
 import com.voximplant.sdk.call.RejectMode;
 import com.voximplant.sdkdemo.Shared;
-import com.voximplant.sdkdemo.manager.ICallEventsListener;
 import com.voximplant.sdkdemo.manager.VoxCallManager;
 
 import java.lang.ref.WeakReference;
@@ -19,18 +19,20 @@ import java.util.Map;
 
 import static com.voximplant.sdkdemo.utils.Constants.APP_TAG;
 
-public class IncomingCallPresenter implements IncomingCallContract.Presenter, ICallEventsListener {
+public class IncomingCallPresenter implements IncomingCallContract.Presenter, ICallListener {
     private WeakReference<IncomingCallContract.View> mView;
     private WeakReference<ICall> mCall;
-    private VoxCallManager mCallManager = Shared.getInstance().getCallManager();
     private HashMap<String, String> mHeaders = null;
-
 
     IncomingCallPresenter(IncomingCallContract.View view, String callId) {
         mView = new WeakReference<>(view);
-        if (callId != null && mCallManager != null) {
-            mCall = new WeakReference<>(mCallManager.getCallById(callId));
-            mCallManager.addCallEventListener(callId, this);
+        VoxCallManager callManager = Shared.getInstance().getCallManager();
+        if (callId != null && callManager != null) {
+            ICall call = callManager.getCallById(callId);
+            if (call != null) {
+                mCall = new WeakReference<>(call);
+                call.addCallListener(this);
+            }
         } else {
             Log.e(APP_TAG, "IncomingCallPresenter: failed to get call by id");
         }
@@ -42,7 +44,7 @@ public class IncomingCallPresenter implements IncomingCallContract.Presenter, IC
     private void stop() {
         ICall call = mCall.get();
         if (call != null) {
-            mCallManager.removeCallEventListener(call.getCallId(), this);
+            call.removeCallListener(this);
             IncomingCallContract.View view = mView.get();
             if (view != null) {
                 view.onCallEnded(call.getCallId());
@@ -64,7 +66,7 @@ public class IncomingCallPresenter implements IncomingCallContract.Presenter, IC
     public void answerCall() {
         ICall call = mCall.get();
         if (call != null) {
-            mCallManager.removeCallEventListener(call.getCallId(), this);
+            call.removeCallListener(this);
         }
     }
 
@@ -84,12 +86,12 @@ public class IncomingCallPresenter implements IncomingCallContract.Presenter, IC
     }
 
     @Override
-    public void onCallFailed(int code, String description, Map<String, String> headers) {
+    public void onCallFailed(ICall call, int code, String description, Map<String, String> headers) {
         stop();
     }
 
     @Override
-    public void onCallDisconnected(Map<String, String> headers, boolean answeredElsewhere) {
+    public void onCallDisconnected(ICall call, Map<String, String> headers, boolean answeredElsewhere) {
         stop();
     }
 
