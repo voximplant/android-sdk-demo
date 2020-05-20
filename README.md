@@ -6,10 +6,16 @@ Voximplant cloud, logging in, initiating and accepting calls. In order to build 
 repository and open it as an Android Studio project.
 
 ## References
-1. [Voximplant Android SDK documentation](http://voximplant.com/docs/references/mobilesdk/android/)
-2. [Quick start for Voximplant Android SDK](http://voximplant.com/docs/quickstart/26/using-android-sdk/)
-3. [Instructions to add Voximplant push notifications to an android project](http://voximplant.com/blog/push-notifications-for-android/)
+1. [Voximplant Android SDK documentation](https://voximplant.com/docs/references/androidsdk)
+2. [Quick start for Voximplant Android SDK](https://voximplant.com/docs/introduction/integration/adding_sdks/installing/android_sdk)
+3. [Instructions to add Voximplant push notifications to an android project](https://voximplant.com/docs/introduction/integration/adding_sdks/push_notifications/android_sdk)
 
 ## Branches
 1. <b>master</b> - base functionality for audio and video calls
 2. <b>master_push_notifications</b> - base functionality and push notifications support
+
+
+## Have a question
+- contact us via `support@voximplant.com`
+- create an issue
+- join our developer [community](https://discord.gg/sfCbT5u)
